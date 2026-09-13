@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+
+    match /quotes/{quoteId} {
+      allow read, write: if true;
+    }
+
+    match /publicMessages/{messageId} {
+      allow read, write: if true;
+    }
+
+    match /privateMessages/{messageId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /confessions/{confessionId} {
+      allow read, write: if true;
+    }
+
+    match /memories/{memoryId} {
+      allow read, write: if true;
+    }
+
+    match /media/{mediaId} {
+      allow read, write: if true;
+    }
+
+    match /reels_and_videos/{itemId} {
+      allow read, write: if true;
+    }
+
+    match /aiChats/{chatId} {
+      allow read, write: if true;
+    }
+
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
+
+

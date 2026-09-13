@@ -1,0 +1,6 @@
+{
+  "name": "College Memories Full Stack",
+  "description": "Full-stack College Memories digital time capsule with Node.js & Express RESTful API, JWT user authentication, persistent database, and React frontend.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

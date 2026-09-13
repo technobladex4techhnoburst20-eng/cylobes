@@ -1,0 +1,77 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Student user profile synchronized across Firebase Auth and Firestore",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "avatar": { "type": "string" },
+        "branch": { "type": "string" },
+        "bio": { "type": "string" },
+        "pronouns": { "type": "string" },
+        "dob": { "type": "string" },
+        "location": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "name"]
+    },
+    "Quote": {
+      "title": "Quote",
+      "description": "Yearbook farewell quote",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "text": { "type": "string" },
+        "author": { "type": "string" },
+        "authorId": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "text", "author"]
+    },
+    "PublicMessage": {
+      "title": "PublicMessage",
+      "description": "Night chats live public wall message",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "text": { "type": "string" },
+        "sender": { "type": "string" },
+        "senderName": { "type": "string" },
+        "senderAvatar": { "type": "string" },
+        "timestamp": { "type": "number" }
+      },
+      "required": ["id", "text", "sender", "timestamp"]
+    },
+    "Media": {
+      "title": "Media",
+      "description": "Reel, campus video, or candid batch photo",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["reel", "video", "photo"] },
+        "src": { "type": "string" },
+        "thumbnail": { "type": "string" },
+        "caption": { "type": "string" },
+        "author": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorAvatar": { "type": "string" },
+        "likes": { "type": "number" },
+        "likedBy": { "type": "array", "items": { "type": "string" } },
+        "aspectRatio": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "type", "src", "author"]
+    }
+  },
+  "firestore": {
+    "users": { "schema": "User", "description": "Student profiles" },
+    "quotes": { "schema": "Quote", "description": "Farewell quotes" },
+    "publicMessages": { "schema": "PublicMessage", "description": "Real-time campus messages" },
+    "media": { "schema": "Media", "description": "Videos, reels, and candid photos" }
+  }
+}

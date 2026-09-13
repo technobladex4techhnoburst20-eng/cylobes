@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5, viewport-fit=cover">
+  <title>College Memories | The Time Capsule</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Inter:wght@200;300;400;500;600&family=Noto+Sans+Kannada:wght@300;400;500;600&family=Caveat:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#003d80">
+  <meta name="description" content="A digital time capsule for our college batch.">
+  <style>
+    :root {
+      --bg: #f0f4f8;
+      --bg-warm: #e3eaf3;
+      --text: #1a2a40;
+      --text-soft: #4a5e7a;
+      --text-mute: #7a8fa8;
+      --sage: #8a9a7b;
+      --sage-deep: #6b7a5e;
+      --blue: #0056b3;
+      --blue-deep: #003d80;
+      --terracotta: #a05a46;
+      --line: rgba(26, 42, 64, 0.14);
+      --line-soft: rgba(26, 42, 64, 0.06);
+      --ease-quiet: cubic-bezier(.22, 1, .36, 1);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { width: 100%; overflow-x: hidden; touch-action: pan-y; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-weight: 300; line-height: 1.7; }
+    #bg-3d { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+    .grid-bg { position: fixed; inset: 0; z-index: 1; pointer-events: none; background-image: linear-gradient(rgba(0,86,179,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,86,179,0.03) 1px, transparent 1px); background-size: 40px 40px; }
+    .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 1.2rem 2.5rem; display: flex; align-items: center; justify-content: space-between; background: rgba(240, 244, 248, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--line-soft); }
+    .nav__logo { display: flex; align-items: baseline; gap: 0.6rem; text-decoration: none; color: var(--text); }
+    .logo-mark { font-size: 1.4rem; }
+    .logo-text { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 500; color: var(--blue-deep); }
+    .nav__links { display: flex; list-style: none; gap: 2rem; }
+    .nav__links a { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-soft); text-decoration: none; transition: color 300ms; display: flex; flex-direction: column; align-items: center; }
+    .nav__links a span.kn { font-family: 'Noto Sans Kannada', sans-serif; font-size: 10px; text-transform: none; letter-spacing: 0; margin-top: 2px; opacity: 0.7; }
+    .nav__links a:hover, .nav__links a.active { color: var(--blue-deep); }
+    .hero { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 6rem 1.5rem 4rem; position: relative; z-index: 2; text-align: center; }
+    .hero__bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+    .hero__bg img { width: 100%; height: 100%; object-fit: cover; opacity: 0.35; }
+    .hero__bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(240,244,248,0.4) 0%, rgba(240,244,248,0.8) 70%, rgba(240,244,248,0.95) 100%); }
+    .hero__content { position: relative; z-index: 3; max-width: 820px; }
+    .hero__eyebrow { display: inline-block; font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--blue-deep); font-weight: 500; margin-bottom: 1.5rem; }
+    .hero__title { font-family: 'Cormorant Garamond', serif; font-size: clamp(3.5rem, 10vw, 7.5rem); font-weight: 500; line-height: 0.95; letter-spacing: -0.02em; color: var(--text); margin-bottom: 0.5rem; }
+    .hero__title em { font-style: italic; font-weight: 400; color: var(--blue); }
+    .hero__title-kn { font-family: 'Noto Sans Kannada', sans-serif; font-size: clamp(1.8rem, 4.5vw, 3.2rem); font-weight: 400; color: var(--text-soft); display: block; margin-top: 0.5rem; }
+    .hero__lead { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.2rem, 2.5vw, 1.6rem); font-style: italic; color: var(--text-soft); margin: 2rem auto; max-width: 600px; }
+    .hero__lead-kn { font-family: 'Noto Sans Kannada', sans-serif; font-size: 1rem; color: var(--text-mute); font-style: normal; margin-top: 0.5rem; display: block; }
+    .hero__scroll { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-mute); text-decoration: none; margin-top: 2rem; }
+    .hero__scroll::after { content: '↓'; font-size: 14px; animation: bounce 2s infinite; }
+    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
+    .timer-wrap { padding: 4rem 1.5rem; text-align: center; position: relative; z-index: 2; background: rgba(240, 244, 248, 0.6); backdrop-filter: blur(8px); border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); }
+    .timer-eyebrow { font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--blue-deep); margin-bottom: 1rem; }
+    .timer-title { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; color: var(--text); margin-bottom: 0.3rem; }
+    .timer-title-kn { font-family: 'Noto Sans Kannada', sans-serif; font-size: 1.2rem; color: var(--text-soft); margin-bottom: 2rem; display: block; }
+    .timer-grid { display: flex; justify-content: center; gap: clamp(1rem, 4vw, 3rem); flex-wrap: wrap; }
+    .timer-col { display: flex; flex-direction: column; align-items: center; }
+    .timer-val { font-family: 'Cormorant Garamond', serif; font-size: clamp(3rem, 7vw, 5rem); line-height: 1; color: var(--blue-deep); font-weight: 500; }
+    .timer-lbl { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-mute); margin-top: 0.5rem; }
+    .cards-section { padding: 8rem 2rem; position: relative; z-index: 2; max-width: 1200px; margin: 0 auto; }
+    .section-header { text-align: center; max-width: 700px; margin: 0 auto 5rem; }
+    .eyebrow { display: inline-block; font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--blue-deep); margin-bottom: 1rem; }
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2.5rem; }
+    .card { background: rgba(255, 255, 255, 0.6); border: 1px solid var(--line-soft); border-radius: 4px; overflow: hidden; text-decoration: none; color: var(--text); transition: all 500ms var(--ease-quiet); display: flex; flex-direction: column; backdrop-filter: blur(10px); }
+    .card:hover { transform: translateY(-8px); border-color: var(--line); box-shadow: 0 20px 40px -15px rgba(26,42,64,0.15); }
+    .card__img-wrap { aspect-ratio: 16/10; overflow: hidden; background: var(--sand); }
+    .card__img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 700ms var(--ease-quiet); }
+    .card:hover .card__img-wrap img { transform: scale(1.05); }
+    .card__body { padding: 2rem; flex: 1; display: flex; flex-direction: column; }
+    .card__num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue-deep); margin-bottom: 0.5rem; }
+    .card__title { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 500; line-height: 1.2; margin-bottom: 0.3rem; }
+    .card__title-kn { font-family: 'Noto Sans Kannada', sans-serif; font-size: 1.1rem; color: var(--text-soft); margin-bottom: 1rem; }
+    .card__desc { font-size: 0.95rem; color: var(--text-soft); line-height: 1.6; margin-bottom: 0.5rem; }
+    .card__desc-kn { font-family: 'Noto Sans Kannada', sans-serif; font-size: 0.85rem; color: var(--text-mute); }
+    .vow-section { padding: 6rem 2rem; text-align: center; position: relative; z-index: 2; background: var(--bg-warm); }
+    .vow-box { max-width: 700px; margin: 0 auto; }
+    .vow-text { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.5rem, 3.5vw, 2.2rem); font-style: italic; line-height: 1.5; color: var(--text); margin-bottom: 1rem; }
+    .vow-text-kn { font-family: 'Noto Sans Kannada', sans-serif; font-size: 1.1rem; color: var(--text-soft); line-height: 1.6; margin-bottom: 2rem; }
+    .vow-sign { font-family: 'Caveat', cursive; font-size: 1.8rem; color: var(--blue-deep); }
+    .footer { background: var(--text); color: var(--bg); padding: 5rem 2rem 3rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 3rem; max-width: 1280px; margin: 0 auto; position: relative; z-index: 2; }
+    .footer__col h4 { font-family: 'Inter', sans-serif; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--blue); margin-bottom: 1rem; }
+    .footer__col a { color: var(--bg); text-decoration: none; opacity: 0.8; display: block; margin-bottom: 0.5rem; font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; }
+    .editable-img { cursor: pointer; position: relative; transition: filter 300ms; }
+    .editable-img:hover { filter: brightness(1.05); }
+    .editable-img::after { content: '📷'; position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.8); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 14px; opacity: 0; transition: opacity 300ms; pointer-events: none; backdrop-filter: blur(4px); }
+    .editable-img:hover::after { opacity: 1; }
+    .mp-player { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9998; display: flex; align-items: center; gap: 0.9rem; padding: 0.6rem 1.1rem 0.6rem 0.6rem; background: rgba(240, 244, 248, 0.95); backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: 999px; box-shadow: 0 12px 30px -10px rgba(26,42,64,0.3); }
+    .mp-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--blue-deep); border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 300ms; flex-shrink: 0; }
+    .mp-btn:hover { background: var(--blue); }
+    .mp-btn.is-playing { background: var(--sage-deep); }
+    .mp-icon { width: 16px; height: 16px; }
+    .mp-btn.is-playing .mp-icon-play { display: none; }
+    .mp-btn:not(.is-playing) .mp-icon-pause { display: none; }
+    .mp-info { display: flex; flex-direction: column; line-height: 1.2; max-width: 120px; overflow: hidden; }
+    .mp-title { font-family: 'Cormorant Garamond', serif; font-size: 0.92rem; color: var(--text); font-style: italic; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+    .mp-upload-btn { background: none; border: none; cursor: pointer; font-size: 1.2rem; opacity: 0.6; transition: opacity 300ms; padding: 0; display: flex; align-items: center; }
+    .install-banner { position: fixed; bottom: 5rem; left: 50%; transform: translateX(-50%); background: var(--blue-deep); color: #fff; padding: 0.8rem 1.5rem; border-radius: 50px; display: none; align-items: center; gap: 1rem; z-index: 9999; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .install-banner button { background: #fff; color: var(--blue-deep); border: none; padding: 0.4rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; }
+    @media (max-width: 768px) {
+      .nav { padding: 1rem 1.2rem; }
+      .nav__links { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-3d"></canvas>
+  <div class="grid-bg"></div>
+
+  <nav class="nav">
+    <a href="classic-home.html" class="nav__logo">
+      <span class="logo-mark">🎓</span>
+      <span class="logo-text">College Memories</span>
+    </a>
+    <ul class="nav__links">
+      <li><a href="classic-home.html" class="active">Home<span class="kn">ಮುಖಪುಟ</span></a></li>
+      <li><a href="letters.html">Campus Notes<span class="kn">ಕ್ಯಾಂಪಸ್ ಟಿಪ್ಪಣಿಗಳು</span></a></li>
+      <li><a href="sky.html">Night Chats<span class="kn">ರಾತ್ರಿ ಚಾಟ್</span></a></li>
+      <li><a href="garden.html">The Yearbook<span class="kn">ಸ್ಮರಣಿಕೆ</span></a></li>
+    </ul>
+  </nav>
+
+  <section class="hero">
+    <div class="hero__bg">
+      <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1800&q=80" alt="College Campus" class="editable-img" data-img-id="home-hero">
+    </div>
+    <div class="hero__content">
+      <span class="hero__eyebrow">A Digital Time Capsule · Batch 2024–2025</span>
+      <h1 class="hero__title">The Days We<br><em>Lived Together</em></h1>
+      <span class="hero__title-kn">ನಾವು ಜೊತೆಯಾಗಿ ಕಳೆದ ದಿನಗಳು</span>
+      <p class="hero__lead">Four years of late submissions, endless tea breaks, whispered hostel dreams, and bonds forged in lecture halls.</p>
+      <span class="hero__lead-kn">ನಾಲ್ಕು ವರ್ಷಗಳ ನಗು, ಅಧ್ಯಯನ ಮತ್ತು ಎಂದಿಗೂ ಮರೆಯಲಾಗದ ಸ್ನೇಹದ ಸುಂದರ ಪಯಣ.</span>
+      <a href="#countdown" class="hero__scroll">Discover More</a>
+    </div>
+  </section>
+
+  <section class="timer-wrap" id="countdown">
+    <div class="timer-eyebrow">Until We Walk The Stage · ಘಟಿಕೋತ್ಸವದ ಕ್ಷಣಗಣನೆ</div>
+    <h2 class="timer-title">Convocation Day</h2>
+    <span class="timer-title-kn">ಪದವಿ ಪ್ರದಾನ ಸಮಾರಂಭ</span>
+    <div class="timer-grid">
+      <div class="timer-col"><span class="timer-val" id="tDays">00</span><span class="timer-lbl">Days · ದಿನಗಳು</span></div>
+      <div class="timer-col"><span class="timer-val" id="tHours">00</span><span class="timer-lbl">Hours · ಗಂಟೆಗಳು</span></div>
+      <div class="timer-col"><span class="timer-val" id="tMins">00</span><span class="timer-lbl">Mins · ನಿಮಿಷಗಳು</span></div>
+      <div class="timer-col"><span class="timer-val" id="tSecs">00</span><span class="timer-lbl">Secs · ಸೆಕೆಂಡುಗಳು</span></div>
+    </div>
+  </section>
+
+  <section class="cards-section">
+    <div class="section-header">
+      <span class="eyebrow">Explore Our Archives · ನಮ್ಮ ನೆನಪುಗಳ ಖಜಾನೆ</span>
+      <h2 style="font-family: 'Cormorant Garamond', serif; font-size: 2.4rem; color: var(--text);">Every Moment Preserved</h2>
+    </div>
+    <div class="cards-grid">
+      <a href="letters.html" class="card">
+        <div class="card__img-wrap">
+          <img src="https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=800&q=80" alt="Notes" class="editable-img" data-img-id="card-notes">
+        </div>
+        <div class="card__body">
+          <span class="card__num">01 / ARCHIVE</span>
+          <h3 class="card__title">Campus Notes</h3>
+          <span class="card__title-kn">ಕ್ಯಾಂಪಸ್ ಟಿಪ್ಪಣಿಗಳು</span>
+          <p class="card__desc">Unsent letters, dorm reflections, and shared quotes that defined our batch.</p>
+          <span class="card__desc-kn">ಕಳುಹಿಸದ ಪತ್ರಗಳು, ವಸತಿನಿಲಯದ ನೆನಪುಗಳು ಮತ್ತು ನಮ್ಮ ಬ್ಯಾಚ್‌ನ ಮಾತುಗಳು.</span>
+        </div>
+      </a>
+      <a href="sky.html" class="card">
+        <div class="card__img-wrap">
+          <img src="https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?auto=format&fit=crop&w=800&q=80" alt="Chats" class="editable-img" data-img-id="card-chats">
+        </div>
+        <div class="card__body">
+          <span class="card__num">02 / ARCHIVE</span>
+          <h3 class="card__title">Night Chats</h3>
+          <span class="card__title-kn">ರಾತ್ರಿ ಚಾಟ್</span>
+          <p class="card__desc">Late-night talks, hostel rooftop conversations, confessions, and secrets.</p>
+          <span class="card__desc-kn">ತಡರಾತ್ರಿಯ ಮಾತುಗಳು, ವಸತಿನಿಲಯದ ಛಾವಣಿಯ ಮೇಲಿನ ಹರಟೆ ಮತ್ತು ರಹಸ್ಯಗಳು.</span>
+        </div>
+      </a>
+      <a href="garden.html" class="card">
+        <div class="card__img-wrap">
+          <img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=800&q=80" alt="Yearbook" class="editable-img" data-img-id="card-yearbook">
+        </div>
+        <div class="card__body">
+          <span class="card__num">03 / ARCHIVE</span>
+          <h3 class="card__title">The Yearbook</h3>
+          <span class="card__title-kn">ಸ್ಮರಣಿಕೆ</span>
+          <p class="card__desc">A collaborative Polaroid photo gallery preserving every laugh and shared trip.</p>
+          <span class="card__desc-kn">ಪ್ರತಿಯೊಂದು ನಗು ಮತ್ತು ಪ್ರವಾಸದ ನೆನಪುಗಳನ್ನು ಕಾಪಾಡುವ ಫೋಟೋ ಗ್ಯಾಲರಿ.</span>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <section class="vow-section">
+    <div class="vow-box">
+      <p class="vow-text">"We came as strangers, lived as a family, and leave as legends carrying each other's memories forever."</p>
+      <p class="vow-text-kn">"ನಾವು ಅಪರಿಚಿತರಾಗಿ ಬಂದೆವು, ಕುಟುಂಬವಾಗಿ ಬದುಕಿದೆವು, ಮತ್ತು ಒಬ್ಬರನ್ನೊಬ್ಬರು ನೆನಪಿಸಿಕೊಳ್ಳುತ್ತಾ ಇತಿಹಾಸವಾಗಿ ನಿರ್ಗಮಿಸುತ್ತೇವೆ."</p>
+      <div class="vow-sign">— Class of 2025</div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer__col">
+      <h4>College Memories</h4>
+      <p style="font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; opacity: 0.8;">A digital time capsule for our batch. 🤍<br><span style="font-family: 'Noto Sans Kannada', sans-serif; font-size: 0.9rem;">ನಮ್ಮ ಬ್ಯಾಚ್‌ಗಾಗಿ ಡಿಜಿಟಲ್ ಟೈಮ್ ಕ್ಯಾಪ್ಸೂಲ್.</span></p>
+    </div>
+    <div class="footer__col">
+      <h4>Navigate</h4>
+      <a href="classic-home.html">Home</a>
+      <a href="letters.html">Notes</a>
+      <a href="sky.html">Chats</a>
+      <a href="garden.html">Yearbook</a>
+    </div>
+    <div class="footer__col">
+      <h4>Admin</h4>
+      <a href="admin.html">🔐 Admin Panel</a>
+    </div>
+  </footer>
+
+  <div class="install-banner" id="installBanner">
+    <span>Install College Memories App for offline access!</span>
+    <button id="installBtn">Install</button>
+  </div>
+
+  <div class="mp-player">
+    <input type="file" id="mpFileInput" accept="audio/*" hidden>
+    <button class="mp-btn" id="mpPlayBtn" aria-label="play music">
+      <svg class="mp-icon mp-icon-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      <svg class="mp-icon mp-icon-pause" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
+    </button>
+    <div class="mp-info"><span class="mp-title" id="mpTitle">our song</span></div>
+    <button class="mp-upload-btn" id="mpUploadBtn" title="Upload your music">🎵</button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(e => console.log(e));
+      });
+    }
+
+    let deferredPrompt;
+    const installBanner = document.getElementById('installBanner');
+    const installBtn = document.getElementById('installBtn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBanner.style.display = 'flex';
+    });
+
+    installBtn.addEventListener('click', () => {
+      installBanner.style.display = 'none';
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+      }
+    });
+
+    function getOrInitConvocationTarget() {
+      try {
+        const stored = localStorage.getItem('campus_convocation_countdown_target');
+        if (stored) {
+          const parsed = Number(stored);
+          if (!isNaN(parsed) && parsed > Date.now()) return parsed;
+        }
+      } catch(e) {}
+      const target = Date.now() + (260 * 24 * 3600 + 10 * 3600 + 45 * 60 + 30) * 1000;
+      try { localStorage.setItem('campus_convocation_countdown_target', String(target)); } catch(e) {}
+      return target;
+    }
+
+    const targetDate = getOrInitConvocationTarget();
+    function updateCountdown() {
+      const now = new Date().getTime();
+      const diff = Math.max(0, targetDate - now);
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const s = Math.floor((diff % (1000 * 60)) / 1000);
+      document.getElementById('tDays').innerText = String(d);
+      document.getElementById('tHours').innerText = String(h).padStart(2, '0');
+      document.getElementById('tMins').innerText = String(m).padStart(2, '0');
+      document.getElementById('tSecs').innerText = String(s).padStart(2, '0');
+    }
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
+
+    const safeStorage = {
+      get: (k) => { try { return localStorage.getItem(k); } catch(e) { return null; } },
+      set: (k, v) => { try { localStorage.setItem(k, v); } catch(e) {} }
+    };
+
+    document.querySelectorAll('.editable-img').forEach(el => {
+      const id = el.dataset.imgId;
+      const saved = safeStorage.get('custom-img-' + id);
+      if (saved) el.src = saved;
+      el.addEventListener('click', () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = e => {
+          const file = e.target.files[0];
+          const reader = new FileReader();
+          reader.onload = ev => {
+            const dataUrl = ev.target.result;
+            safeStorage.set('custom-img-' + id, dataUrl);
+            el.src = dataUrl;
+          };
+          reader.readAsDataURL(file);
+        };
+        input.click();
+      });
+    });
+
+    let bgScene, bgCamera, bgRenderer, petals3D = [];
+    const isMobile = /Mobi|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+    function init3DBackground() {
+      try {
+        const canvas = document.getElementById('bg-3d');
+        if (!canvas || typeof THREE === 'undefined') return;
+        bgScene = new THREE.Scene();
+        bgScene.fog = new THREE.FogExp2(0xf0f4f8, 0.015);
+        bgCamera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.1, 1000);
+        bgCamera.position.z = 30;
+        bgRenderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, alpha: true, powerPreference: 'high-performance' });
+        bgRenderer.setSize(innerWidth, innerHeight);
+        bgRenderer.setPixelRatio(Math.min(devicePixelRatio, isMobile ? 1.5 : 2));
+
+        const petalCanvas = document.createElement('canvas');
+        petalCanvas.width = 64; petalCanvas.height = 64;
+        const pctx = petalCanvas.getContext('2d');
+        pctx.translate(32, 32);
+        pctx.beginPath();
+        pctx.moveTo(0, -20);
+        pctx.bezierCurveTo(15, -15, 15, 15, 0, 20);
+        pctx.bezierCurveTo(-15, 15, -15, -15, 0, -20);
+        pctx.fillStyle = 'rgba(0, 102, 204, 0.8)';
+        pctx.fill();
+        const petalTexture = new THREE.CanvasTexture(petalCanvas);
+        const petalMaterial = new THREE.MeshBasicMaterial({ map: petalTexture, transparent: true, side: THREE.DoubleSide, depthWrite: false });
+
+        const petalCount = isMobile ? 40 : 200;
+        for (let i = 0; i < petalCount; i++) {
+          const size = Math.max(0.3, Math.random() * 1.5 + 0.5);
+          const geometry = new THREE.PlaneGeometry(size, size);
+          const petal = new THREE.Mesh(geometry, petalMaterial);
+          petal.position.set((Math.random() - 0.5) * 80, (Math.random() - 0.5) * 80, (Math.random() - 0.5) * 60);
+          petal.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+          petal.userData = { speed: Math.random() * 0.05 + 0.02, rotSpeed: (Math.random() - 0.5) * 0.02, sway: Math.random() * Math.PI * 2, baseX: petal.position.x };
+          bgScene.add(petal);
+          petals3D.push(petal);
+        }
+        addEventListener('resize', () => {
+          bgCamera.aspect = innerWidth / innerHeight;
+          bgCamera.updateProjectionMatrix();
+          bgRenderer.setSize(innerWidth, innerHeight);
+        });
+        animate3D();
+      } catch (e) {}
+    }
+    function animate3D() {
+      requestAnimationFrame(animate3D);
+      if(!bgRenderer) return;
+      const t = performance.now() * 0.001;
+      petals3D.forEach(petal => {
+        petal.position.y -= petal.userData.speed;
+        petal.position.x = petal.userData.baseX + Math.sin(t + petal.userData.sway) * 2;
+        petal.rotation.z += petal.userData.rotSpeed;
+        if (petal.position.y < -40) {
+          petal.position.y = 40;
+          petal.position.x = (Math.random() - 0.5) * 80;
+          petal.userData.baseX = petal.position.x;
+        }
+      });
+      bgRenderer.render(bgScene, bgCamera);
+    }
+    init3DBackground();
+
+    const fileInput = document.getElementById('mpFileInput'), uploadBtn = document.getElementById('mpUploadBtn'), playBtn = document.getElementById('mpPlayBtn'), titleEl = document.getElementById('mpTitle');
+    let audio = new Audio();
+    let isPlaying = false;
+    const savedSong = safeStorage.get('lovers_song_data'), savedName = safeStorage.get('lovers_song_name');
+    if (savedSong) { audio.src = savedSong; titleEl.innerText = savedName || "our song"; }
+    uploadBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const fileURL = ev.target.result;
+        safeStorage.set('lovers_song_data', fileURL);
+        safeStorage.set('lovers_song_name', file.name.replace(/\.[^/.]+$/, ""));
+        audio.src = fileURL;
+        titleEl.innerText = file.name.replace(/\.[^/.]+$/, "");
+        audio.play().then(() => { isPlaying = true; playBtn.classList.add('is-playing'); }).catch(() => {});
+      };
+      reader.readAsDataURL(file);
+    });
+    playBtn.addEventListener('click', () => {
+      if (isPlaying) { audio.pause(); playBtn.classList.remove('is-playing'); isPlaying = false; }
+      else {
+        if (!audio.src) { fileInput.click(); return; }
+        audio.play().then(() => { playBtn.classList.add('is-playing'); isPlaying = true; }).catch(() => {});
+      }
+    });
+  </script>
+</body>
+</html>

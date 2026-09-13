@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5, viewport-fit=cover">
+  <title>College Memories | Admin Panel</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500;600&family=Noto+Sans+Kannada:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    :root {
+      --bg: #050810;
+      --bg-panel: rgba(10, 15, 30, 0.85);
+      --neon-blue: #0056b3;
+      --neon-blue-soft: #007bff;
+      --text-main: #e0e6ed;
+      --text-mute: #8a9bb5;
+      --line: rgba(0, 86, 179, 0.3);
+      --danger: #dc3545;
+      --success: #28a745;
+      --warning: #ffc107;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { width: 100%; overflow-x: hidden; touch-action: pan-y; }
+    body { background: var(--bg); color: var(--text-main); font-family: 'Inter', sans-serif; font-weight: 300; line-height: 1.7; }
+
+    .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 1.2rem 2.5rem; display: flex; align-items: center; justify-content: space-between; background: rgba(5, 8, 16, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+    .nav__logo { display: flex; align-items: baseline; gap: 0.6rem; text-decoration: none; color: var(--text-main); }
+    .logo-mark { font-size: 1.4rem; }
+    .logo-text { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 500; color: var(--neon-blue); }
+    .nav__links { display: flex; list-style: none; gap: 2rem; }
+    .nav__links a { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-mute); text-decoration: none; transition: color 300ms; display: flex; flex-direction: column; align-items: center; }
+    .nav__links a:hover, .nav__links a.active { color: var(--neon-blue); }
+
+    .admin-content { position: relative; z-index: 2; min-height: 100vh; padding: 8rem 2rem 4rem; max-width: 1200px; margin: 0 auto; }
+    .eyebrow { display: inline-block; font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; color: var(--neon-blue); margin-bottom: 1rem; }
+    .page-title { font-family: 'Cormorant Garamond', serif; font-size: 3rem; color: var(--text-main); margin-bottom: 2rem; }
+
+    .auth-box { max-width: 400px; margin: 4rem auto; background: var(--bg-panel); padding: 2.5rem; border-radius: 12px; border: 1px solid var(--line); text-align: center; }
+    .auth-box input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 0.8rem 1rem; color: #fff; margin-bottom: 1rem; outline: none; }
+    .auth-box button { width: 100%; background: var(--neon-blue); color: #fff; border: none; border-radius: 8px; padding: 0.8rem; font-weight: 500; cursor: pointer; }
+
+    .dashboard { display: none; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
+    .stat-card { background: var(--bg-panel); border: 1px solid var(--line); border-radius: 12px; padding: 1.5rem; text-align: center; }
+    .stat-val { font-size: 2.5rem; font-weight: 600; color: var(--neon-blue); font-family: 'JetBrains Mono', monospace; }
+    .stat-label { font-size: 0.85rem; color: var(--text-mute); text-transform: uppercase; letter-spacing: 0.1em; }
+
+    .table-section { background: var(--bg-panel); border: 1px solid var(--line); border-radius: 12px; padding: 2rem; margin-bottom: 3rem; overflow-x: auto; }
+    .section-title { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; margin-bottom: 1.5rem; color: var(--text-main); }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th, td { padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.9rem; }
+    th { color: var(--neon-blue); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.1em; }
+    td { color: var(--text-main); }
+    .action-btn { background: none; border: 1px solid; border-radius: 4px; padding: 0.3rem 0.6rem; font-size: 0.75rem; cursor: pointer; margin-right: 0.5rem; transition: all 200ms; }
+    .btn-danger { border-color: var(--danger); color: var(--danger); }
+    .btn-danger:hover { background: var(--danger); color: #fff; }
+    .btn-warning { border-color: var(--warning); color: var(--warning); }
+    .btn-warning:hover { background: var(--warning); color: #000; }
+    .btn-success { border-color: var(--success); color: var(--success); }
+    .btn-success:hover { background: var(--success); color: #fff; }
+
+    .wipe-btn { background: var(--danger); color: #fff; border: none; padding: 0.8rem 1.5rem; border-radius: 6px; cursor: pointer; font-weight: 500; }
+    .wipe-btn:hover { background: #bd2130; }
+
+    @media (max-width: 768px) {
+      .nav__links { display: none; }
+      .admin-content { padding: 6rem 1rem 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <a href="index.html" class="nav__logo">
+      <span class="logo-mark">🎓</span>
+      <span class="logo-text">College Memories</span>
+    </a>
+    <ul class="nav__links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="letters.html">Campus Notes</a></li>
+      <li><a href="sky.html">Night Chats</a></li>
+      <li><a href="garden.html">The Yearbook</a></li>
+      <li><a href="admin.html" class="active">Admin Panel</a></li>
+    </ul>
+  </nav>
+
+  <div class="admin-content">
+    <div class="auth-box" id="adminAuth">
+      <span class="eyebrow">Moderation Access</span>
+      <h2 style="font-family: 'Cormorant Garamond', serif; font-size: 2rem; margin-bottom: 1.5rem; color: #fff;">Admin Authentication</h2>
+      <input type="password" id="adminPass" placeholder="Enter Admin Password...">
+      <button onclick="authAdmin()">Login to Console</button>
+    </div>
+
+    <div class="dashboard" id="adminDash">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <span class="eyebrow">Console Overview</span>
+          <h1 class="page-title" style="margin-bottom: 0;">Moderation Center</h1>
+        </div>
+        <button class="wipe-btn" onclick="wipeAllData()">⚠️ Wipe Entire Database</button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-val" id="userCount">0</div>
+          <div class="stat-label">Total Users</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="publicMsgCount">0</div>
+          <div class="stat-label">Public Messages</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="photoCount">0</div>
+          <div class="stat-label">Yearbook Photos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="reportCount">0</div>
+          <div class="stat-label">Flagged Reports</div>
+        </div>
+      </div>
+
+      <div class="table-section">
+        <h2 class="section-title">Site Problems Reported by Users</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Reporter UID</th>
+              <th>Reported Issue</th>
+              <th>Timestamp</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="siteProblemsTable"></tbody>
+        </table>
+      </div>
+
+      <div class="table-section">
+        <h2 class="section-title">Flagged Content Reports</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Reporter UID</th>
+              <th>Offender UID</th>
+              <th>Message Excerpt</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="reportsTable"></tbody>
+        </table>
+      </div>
+
+      <div class="table-section">
+        <h2 class="section-title">User Accounts Management</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>UID</th>
+              <th>Name</th>
+              <th>Username</th>
+              <th>Phone</th>
+              <th>Branch</th>
+              <th>DOB</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersTable"></tbody>
+        </table>
+      </div>
+
+      <div class="table-section">
+        <h2 class="section-title">Public Chat Messages</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Sender UID</th>
+              <th>Message Content</th>
+              <th>Time</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="publicTable"></tbody>
+        </table>
+      </div>
+
+      <div class="table-section">
+        <h2 class="section-title">Wall of Thoughts Quotes</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Author</th>
+              <th>Quote Text</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="quotesTable"></tbody>
+        </table>
+      </div>
+
+      <div class="table-section">
+        <h2 class="section-title">Yearbook Gallery Photos</h2>
+        <div id="photosGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const safeStorage = {
+      get: (k) => { try { return localStorage.getItem(k); } catch(e) { return null; } },
+      set: (k, v) => { try { localStorage.setItem(k, v); } catch(e) {} },
+      remove: (k) => { try { localStorage.removeItem(k); } catch(e) {} }
+    };
+
+    async function authAdmin() {
+      const pass = document.getElementById('adminPass').value;
+      if (!pass) return;
+      try {
+        const res = await fetch('/api/admin/users', {
+          headers: { 'x-admin-key': pass }
+        });
+        if (res.ok) {
+          window.currentAdminKey = pass;
+          document.getElementById('adminAuth').style.display = 'none';
+          document.getElementById('adminDash').style.display = 'block';
+          loadAdminData();
+        } else {
+          alert("Access Denied: Invalid Security Passkey.");
+        }
+      } catch (err) {
+        alert("Authentication service unreachable.");
+      }
+    }
+
+    function loadAdminData() {
+      const users = JSON.parse(safeStorage.get('college_users') || '[]');
+      const publicMsgs = JSON.parse(safeStorage.get('sky_whispers') || '[]');
+      const photos = JSON.parse(safeStorage.get('garden_memories_permanent') || '[]');
+      const reports = JSON.parse(safeStorage.get('college_reports') || '[]');
+      const siteProblems = JSON.parse(safeStorage.get('college_site_reports') || '[]');
+      const quotes = JSON.parse(safeStorage.get('college_quotes') || '[]');
+
+      document.getElementById('userCount').innerText = users.length;
+      document.getElementById('publicMsgCount').innerText = publicMsgs.length;
+      document.getElementById('photoCount').innerText = photos.length;
+      document.getElementById('reportCount').innerText = reports.length;
+
+      const probTbody = document.getElementById('siteProblemsTable');
+      probTbody.innerHTML = '';
+      if(siteProblems.length === 0) {
+        probTbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--text-mute);">No site problems reported.</td></tr>';
+      } else {
+        siteProblems.forEach((p, i) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `<td><code>${p.reporter}</code></td><td>${p.issue}</td><td>${new Date(p.timestamp).toLocaleTimeString()}</td><td><button class="action-btn btn-danger" onclick="deleteProblem(${i})">Resolve / Dismiss</button></td>`;
+          probTbody.appendChild(row);
+        });
+      }
+
+      const repTbody = document.getElementById('reportsTable');
+      repTbody.innerHTML = '';
+      if(reports.length === 0) {
+        repTbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--text-mute);">No flagged reports.</td></tr>';
+      } else {
+        reports.forEach((r, i) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `<td><code>${r.reporter}</code></td><td><code>${r.offender}</code></td><td>${r.text}</td><td><button class="action-btn btn-danger" onclick="dismissReport(${i})">Dismiss</button><button class="action-btn btn-warning" onclick="blockUserByUid('${r.offender}')">Block Offender</button></td>`;
+          repTbody.appendChild(row);
+        });
+      }
+
+      const uTbody = document.getElementById('usersTable');
+      uTbody.innerHTML = '';
+      users.forEach((u, i) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td><code>${u.uid}</code></td><td>${u.name}</td><td>@${u.username}</td><td>${u.phone}</td><td>${u.branch}</td><td>${u.dob}</td><td><span style="color:${u.status === 'blocked' ? 'var(--danger)' : 'var(--success)'}">${u.status || 'active'}</span></td><td><button class="action-btn btn-warning" onclick="toggleUserStatus(${i})">${u.status === 'blocked' ? 'Unblock' : 'Block'}</button><button class="action-btn btn-danger" onclick="deleteUser(${i})">Delete</button></td>`;
+        uTbody.appendChild(row);
+      });
+
+      const pTbody = document.getElementById('publicTable');
+      pTbody.innerHTML = '';
+      publicMsgs.forEach((m, i) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td><code>${m.sender}</code></td><td>${m.text}</td><td>${new Date(m.timestamp).toLocaleTimeString()}</td><td><button class="action-btn btn-danger" onclick="deletePublicMsg(${i})">Delete</button></td>`;
+        pTbody.appendChild(row);
+      });
+
+      const qTbody = document.getElementById('quotesTable');
+      qTbody.innerHTML = '';
+      quotes.forEach((q, i) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${q.author || 'Anonymous'}</td><td>"${q.text}"</td><td><button class="action-btn btn-danger" onclick="deleteQuote(${i})">Delete</button></td>`;
+        qTbody.appendChild(row);
+      });
+
+      const pGrid = document.getElementById('photosGrid');
+      pGrid.innerHTML = '';
+      photos.forEach((p, i) => {
+        const card = document.createElement('div');
+        card.style.position = 'relative';
+        card.innerHTML = `<img src="${p.src}" style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:6px;"><button onclick="deletePhoto(${i})" style="position:absolute; top:5px; right:5px; background:var(--danger); border:none; color:#fff; width:24px; height:24px; border-radius:50%; cursor:pointer;">×</button>`;
+        pGrid.appendChild(card);
+      });
+    }
+
+    function deleteProblem(i) {
+      let probs = JSON.parse(safeStorage.get('college_site_reports') || '[]');
+      probs.splice(i, 1);
+      safeStorage.set('college_site_reports', JSON.stringify(probs));
+      loadAdminData();
+    }
+
+    function dismissReport(i) {
+      let reports = JSON.parse(safeStorage.get('college_reports') || '[]');
+      reports.splice(i, 1);
+      safeStorage.set('college_reports', JSON.stringify(reports));
+      loadAdminData();
+    }
+
+    function blockUserByUid(uid) {
+      let users = JSON.parse(safeStorage.get('college_users') || '[]');
+      const user = users.find(u => u.uid === uid);
+      if(user) {
+        user.status = 'blocked';
+        safeStorage.set('college_users', JSON.stringify(users));
+        loadAdminData();
+        alert(`User ${uid} blocked.`);
+      }
+    }
+
+    function toggleUserStatus(i) {
+      let users = JSON.parse(safeStorage.get('college_users') || '[]');
+      users[i].status = users[i].status === 'blocked' ? 'active' : 'blocked';
+      safeStorage.set('college_users', JSON.stringify(users));
+      loadAdminData();
+    }
+
+    function deleteUser(i) {
+      if(!confirm("Permanently delete this user profile?")) return;
+      let users = JSON.parse(safeStorage.get('college_users') || '[]');
+      users.splice(i, 1);
+      safeStorage.set('college_users', JSON.stringify(users));
+      loadAdminData();
+    }
+
+    function deletePublicMsg(i) {
+      let msgs = JSON.parse(safeStorage.get('sky_whispers') || '[]');
+      msgs.splice(i, 1);
+      safeStorage.set('sky_whispers', JSON.stringify(msgs));
+      loadAdminData();
+    }
+
+    function deleteQuote(i) {
+      let quotes = JSON.parse(safeStorage.get('college_quotes') || '[]');
+      quotes.splice(i, 1);
+      safeStorage.set('college_quotes', JSON.stringify(quotes));
+      loadAdminData();
+    }
+
+    function deletePhoto(i) {
+      let photos = JSON.parse(safeStorage.get('garden_memories_permanent') || '[]');
+      photos.splice(i, 1);
+      safeStorage.set('garden_memories_permanent', JSON.stringify(photos));
+      loadAdminData();
+    }
+
+    function wipeAllData() {
+      if(confirm("FATAL ACTION: Are you sure you want to wipe the ENTIRE database? This action cannot be reversed.")) {
+        safeStorage.remove('college_users');
+        safeStorage.remove('current_user');
+        safeStorage.remove('sky_whispers');
+        safeStorage.remove('college_private_chats');
+        safeStorage.remove('college_chat_requests');
+        safeStorage.remove('college_chat_settings');
+        safeStorage.remove('garden_memories_permanent');
+        safeStorage.remove('college_reports');
+        safeStorage.remove('college_site_reports');
+        safeStorage.remove('college_quotes');
+        safeStorage.remove('college_confessions');
+        safeStorage.remove('reel_meta');
+        loadAdminData();
+        alert("System Reset: All storage wiped successfully.");
+      }
+    }
+  </script>
+</body>
+</html>
