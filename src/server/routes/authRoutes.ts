@@ -233,3 +233,59 @@ authRouter.get("/directory", (req, res: Response) => {
 
   res.json({ success: true, users: results });
 });
+
+// Sync Firebase user with backend DB and issue JWT token
+authRouter.post("/firebase-sync", (req, res: Response) => {
+  try {
+    const { uid, email, name, branch, avatar, bio } = req.body;
+    if (!uid) {
+      res.status(400).json({ error: "Missing uid" });
+      return;
+    }
+    const users = db.get("users");
+    let user = users.find((u) => u.id === uid || (email && u.email && u.email.toLowerCase() === email.toLowerCase()));
+
+    if (!user) {
+      const newUser: UserRecord = {
+        id: uid,
+        username: email ? email.split("@")[0] + "_" + Math.random().toString(36).substring(2, 5) : uid,
+        password: "",
+        name: name || "Graduating Senior",
+        email: email || "",
+        phone: "",
+        branch: branch || "General Engineering",
+        location: "Campus",
+        dob: "",
+        avatar: avatar || "",
+        bio: bio || "",
+        isPrivate: false,
+        status: "active",
+        createdAt: Date.now(),
+      };
+      users.push(newUser);
+      user = newUser;
+    } else {
+      if (name) user.name = name;
+      if (avatar) user.avatar = avatar;
+      if (branch) user.branch = branch;
+      if (bio) user.bio = bio;
+    }
+    db.set("users", users);
+
+    const token = signToken({
+      uid: user.id,
+      username: user.username,
+      name: user.name,
+      branch: user.branch,
+    });
+
+    const { password: _, ...userSafe } = user;
+    res.json({
+      success: true,
+      token,
+      user: userSafe,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: "Firebase sync failed", message: err.message });
+  }
+});

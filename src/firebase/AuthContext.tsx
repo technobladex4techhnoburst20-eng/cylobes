@@ -17,6 +17,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { auth, googleProvider, db } from "./config";
+import { authStorage } from "../services/api";
 
 export interface StudentProfile {
   id: string;
@@ -76,6 +77,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   });
   const [loading, setLoading] = useState(true);
 
+  const syncBackendToken = async (p: StudentProfile) => {
+    try {
+      const res = await fetch("/api/auth/firebase-sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          uid: p.id,
+          email: p.email,
+          name: p.name,
+          branch: p.branch,
+          avatar: p.avatar,
+          bio: p.bio,
+        }),
+      });
+      const json = await res.json();
+      if (res.ok && json.token) {
+        authStorage.setToken(json.token);
+      }
+    } catch (e) {
+      console.warn("Backend token sync warning:", e);
+    }
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       setFirebaseUser(fbUser);
@@ -127,6 +151,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
           setStudentUser(profile);
           localStorage.setItem("college_user", JSON.stringify(profile));
+          await syncBackendToken(profile);
         } catch (err: any) {
           console.warn("Firestore user sync notice (using auth profile fallback):", err?.message || err);
           // Fallback to basic profile from Firebase user
@@ -226,6 +251,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       setStudentUser(profile);
       localStorage.setItem("college_user", JSON.stringify(profile));
+      await syncBackendToken(profile);
       return profile;
     } catch (err: any) {
       console.warn("Google sign in notice:", err?.message || err);
@@ -289,6 +315,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       setStudentUser(profile);
       localStorage.setItem("college_user", JSON.stringify(profile));
+      await syncBackendToken(profile);
       return profile;
     } catch (err: any) {
       console.warn("Sign up notice:", err?.message || err);
@@ -348,6 +375,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       setStudentUser(profile);
       localStorage.setItem("college_user", JSON.stringify(profile));
+      await syncBackendToken(profile);
       return profile;
     } catch (err: any) {
       console.warn("Sign in notice:", err?.message || err);

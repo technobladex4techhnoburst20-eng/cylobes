@@ -7,6 +7,7 @@ export interface UserRecord {
   username: string;
   password: string; // hashed
   name: string;
+  email?: string;
   phone: string;
   branch: string;
   location: string;
