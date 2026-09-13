@@ -1272,17 +1272,25 @@ export const ChatsSection: React.FC<ChatsSectionProps> = ({
                   )}
 
                   {/* Classmates Quick Selector Bar */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between text-[11px] text-[#4a5e7a]">
-                      <span className="font-semibold flex items-center gap-1">
+                  <div className="space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex items-center gap-1 text-[11px] text-[#4a5e7a] font-semibold">
                         <Users className="w-3.5 h-3.5 text-[#003d80]" />
-                        Select a classmate:
-                      </span>
-                      {selectedRecipient && (
-                        <span className="text-[10px] text-[#003d80] font-medium">
-                          Selected: <span className="font-bold">{selectedRecipient.name}</span>
-                        </span>
-                      )}
+                        <span>Select a classmate:</span>
+                      </div>
+                      <div className="relative">
+                        <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#7a8fa8]" />
+                        <input
+                          type="text"
+                          value={directoryQuery}
+                          onChange={(e) => {
+                            setDirectoryQuery(e.target.value);
+                            loadDirectory(e.target.value);
+                          }}
+                          placeholder="Find by Unique Code (UID) or Name..."
+                          className="w-full sm:w-64 pl-7 pr-3 py-1.5 text-[11px] bg-[#f0f4f8] border border-[#1a2a40]/15 rounded-lg focus:outline-hidden focus:border-[#003d80]"
+                        />
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-thin">
@@ -1674,7 +1682,7 @@ export const ChatsSection: React.FC<ChatsSectionProps> = ({
                     setDirectoryQuery(e.target.value);
                     loadDirectory(e.target.value);
                   }}
-                  placeholder="Search by name, branch, or UID..."
+                  placeholder="Search by Unique Code (UID)..."
                   className="w-full pl-8 pr-3 py-2 text-xs bg-[#f0f4f8] border border-[#1a2a40]/15 rounded-lg focus:outline-hidden focus:border-[#003d80]"
                 />
               </div>
@@ -1725,11 +1733,6 @@ export const ChatsSection: React.FC<ChatsSectionProps> = ({
                         </div>
 
                         <div className="flex flex-col items-end gap-1.5 shrink-0">
-                          {!u.isPrivate && u.phone && (
-                            <span className="text-[10px] font-mono text-[#7a8fa8] block">
-                              {u.phone}
-                            </span>
-                          )}
                           {!isSelf && (
                             (() => {
                               const rel = getRequestWithUser(u.id);

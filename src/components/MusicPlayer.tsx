@@ -58,7 +58,7 @@ export const MusicPlayer: React.FC = () => {
     }
     if (audioRef.current) {
       audioRef.current.pause();
-      audioRef.current.src = "";
+      audioRef.current.removeAttribute('src');
     }
   };
 
@@ -67,7 +67,7 @@ export const MusicPlayer: React.FC = () => {
       {/* Always render audio to keep the ref intact */}
       <audio
         ref={audioRef}
-        src={customAudioUrl || ""}
+        src={customAudioUrl || undefined}
         loop
         onEnded={() => setIsPlaying(false)}
         style={{ display: 'none' }}

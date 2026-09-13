@@ -1,12 +1,12 @@
 {
   "projectId": "codex-33403",
-  "appId": "1:410407721636:web:484c636f684e82a1c76431",
+  "appId": "1:410407721636:web:4ce10080bfd629b6c76431",
   "apiKey": "AIzaSyAM1RJYYZzGQaHcWGFdczio0wfHUazeEcg",
   "authDomain": "codex-33403.firebaseapp.com",
-  "firestoreDatabaseId": "(default)",
+  "firestoreDatabaseId": "ai-studio-collegememoriesf-0262a52f-17a3-45d2-8455-674bea906378",
   "storageBucket": "codex-33403.firebasestorage.app",
   "messagingSenderId": "410407721636",
-  "measurementId": "G-3X0RN3J0BV",
-  "oAuthClientId": "",
+  "measurementId": "",
+  "oAuthClientId": "410407721636-1gltn2tv6vs8mljhh86ldbq928jhjget.apps.googleusercontent.com",
   "recaptchaSiteKey": ""
 }
