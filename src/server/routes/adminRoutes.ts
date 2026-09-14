@@ -6,7 +6,7 @@ export const adminRouter = Router();
 // Simple admin middleware check (password can be passed via header x-admin-key or body)
 function requireAdminKey(req: Request, res: Response, next: Function) {
   const key = req.headers["x-admin-key"] || req.body?.adminKey;
-  const adminSecret = process.env.ADMIN_PASSKEY || "rootadidev~";
+  const adminSecret = process.env.ADMIN_PASSKEY || "admin2025";
   if (key && key === adminSecret) {
     next();
   } else {

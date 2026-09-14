@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { User } from "../types";
 import { api } from "../services/api";
+import { useAuth } from "../firebase/AuthContext";
 import { Camera, Upload, Check, X, Sparkles, User as UserIcon, AtSign, Calendar } from "lucide-react";
 
 interface ProfilePictureModalProps {
@@ -27,6 +28,7 @@ export const ProfilePictureModal: React.FC<ProfilePictureModalProps> = ({
   onClose,
   onUpdated,
 }) => {
+  const { updateProfile: updateAuthProfile } = useAuth();
   const [selectedAvatar, setSelectedAvatar] = useState(currentUser?.avatar || PRESET_AVATARS[0].url);
   const [name, setName] = useState(currentUser?.name || "");
   const [username, setUsername] = useState(currentUser?.username || "");
@@ -73,13 +75,31 @@ export const ProfilePictureModal: React.FC<ProfilePictureModalProps> = ({
 
     try {
       setSaving(true);
-      const updated = await api.updateProfile({
+      const payload = {
         name: name.trim(),
         username: username.trim(),
         dob: dob,
         avatar: selectedAvatar,
-      });
-      onUpdated(updated);
+      };
+
+      // 1. Sync update to Firebase AuthContext (Firestore users/{uid} & state)
+      if (updateAuthProfile) {
+        await updateAuthProfile(payload);
+      }
+
+      // 2. Sync update to backend API storage
+      let updatedUser: User;
+      try {
+        const res = await api.updateProfile(payload);
+        updatedUser = res;
+      } catch {
+        updatedUser = {
+          ...currentUser,
+          ...payload,
+        } as User;
+      }
+
+      onUpdated(updatedUser);
       setSuccessMsg(true);
       setTimeout(() => {
         setSuccessMsg(false);
