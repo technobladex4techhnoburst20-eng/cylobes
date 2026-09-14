@@ -17,10 +17,11 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { auth, googleProvider, db } from "./config";
-import { authStorage } from "../services/api";
+import { api, authStorage } from "../services/api";
 
 export interface StudentProfile {
   id: string;
+  username?: string;
   name: string;
   email?: string;
   avatar?: string;
@@ -411,6 +412,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const updated = { ...studentUser, ...data, updatedAt: Date.now() };
     setStudentUser(updated);
     localStorage.setItem("college_user", JSON.stringify(updated));
+
+    try {
+      await api.updateProfile({
+        username: data.username,
+        name: data.name,
+        branch: data.branch,
+        location: data.location,
+        dob: data.dob,
+        bio: data.bio,
+        pronouns: data.pronouns,
+        avatar: data.avatar,
+        isPrivate: data.isPrivate,
+      });
+    } catch (err) {
+      console.warn("Could not sync profile update to backend:", err);
+    }
 
     if (firebaseUser) {
       try {

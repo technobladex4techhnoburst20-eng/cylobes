@@ -186,14 +186,22 @@ mediaRouter.post("/:id/comment", optionalAuth, (req: AuthenticatedRequest, res: 
 });
 
 // 6. DELETE MEDIA
-mediaRouter.delete("/:id", (req, res: Response) => {
+mediaRouter.delete("/:id", optionalAuth, (req: AuthenticatedRequest, res: Response) => {
   const media = db.get("media") || [];
-  const filtered = media.filter((m) => m.id !== req.params.id);
+  const index = media.findIndex((m) => m.id === req.params.id);
 
-  if (filtered.length === media.length) {
+  if (index === -1) {
     res.status(404).json({ error: "Media item not found." });
     return;
   }
+
+  const item = media[index];
+  if (req.user?.uid && item.authorId && item.authorId !== "anon" && item.authorId !== req.user.uid) {
+    res.status(403).json({ error: "You can only delete your own uploaded media." });
+    return;
+  }
+
+  const filtered = media.filter((m) => m.id !== req.params.id);
 
   db.set("media", filtered);
   res.json({ success: true, message: "Media deleted successfully." });

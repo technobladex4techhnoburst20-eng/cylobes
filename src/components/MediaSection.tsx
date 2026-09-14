@@ -79,6 +79,7 @@ export const MediaSection: React.FC<MediaSectionProps> = ({
   const [reelMuted, setReelMuted] = useState(false);
   const [showCommentsFor, setShowCommentsFor] = useState<string | null>(null);
   const [commentInput, setCommentInput] = useState("");
+  const [fullscreenPhotoItem, setFullscreenPhotoItem] = useState<MediaItem | null>(null);
 
   const loadMedia = async () => {
     try {
@@ -101,40 +102,47 @@ export const MediaSection: React.FC<MediaSectionProps> = ({
 
     // Subscribe to Firestore for real-time live reels and videos sync
     const unsubscribe = subscribeToReelsAndVideos((fsItems) => {
-      if (fsItems && fsItems.length > 0) {
-        setMediaList((prev) => {
-          const map = new Map<string, MediaItem>();
-          // Existing items from server
-          prev.forEach((m) => map.set(m.id, m));
-          // Overlay or append Firestore items
-          fsItems.forEach((f) => {
-            const comments: MediaComment[] = (f.comments || []).map((c) => ({
-              id: c.id,
-              author: c.author,
-              text: c.text,
-              createdAt: c.timestamp || Date.now(),
-              authorAvatar: c.avatar,
-            }));
+      const formattedItems: MediaItem[] = (fsItems || []).map((f) => {
+        const comments: MediaComment[] = (f.comments || []).map((c) => ({
+          id: c.id,
+          author: c.author,
+          text: c.text,
+          createdAt: c.timestamp || Date.now(),
+          authorAvatar: c.avatar,
+        }));
 
-            map.set(f.id, {
-              id: f.id,
-              type: f.type,
-              src: f.src,
-              caption: f.caption,
-              author: f.author,
-              likes: f.likes,
-              likedBy: f.likedBy || [],
-              tags: f.tags,
-              aspectRatio: f.type === "reel" ? "9:16" : f.type === "video" ? "16:9" : "1:1",
-              createdAt: f.createdAt,
-              comments: comments,
-            });
-          });
-          return Array.from(map.values()).sort(
-            (a, b) => (b.createdAt || 0) - (a.createdAt || 0)
-          );
-        });
+        return {
+          id: f.id,
+          type: f.type,
+          src: f.src,
+          caption: f.caption,
+          author: f.author,
+          authorId: f.authorId,
+          authorAvatar: f.authorAvatar,
+          likes: f.likes,
+          likedBy: f.likedBy || [],
+          tags: f.tags,
+          aspectRatio: f.type === "reel" ? "9:16" : f.type === "video" ? "16:9" : "1:1",
+          createdAt: f.createdAt,
+          comments: comments,
+        };
+      });
+
+      // Filter by activeTab if needed
+      let result = formattedItems;
+      if (activeTab !== "all") {
+        result = result.filter((m) => m.type === activeTab);
       }
+      if (selectedTag) {
+        result = result.filter((m) => m.tags?.some((t) => t.toLowerCase().includes(selectedTag.toLowerCase())));
+      }
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        result = result.filter((m) => m.caption.toLowerCase().includes(q) || m.author.toLowerCase().includes(q) || m.tags?.some(t => t.toLowerCase().includes(q)));
+      }
+
+      setMediaList(result);
+      setLoading(false);
     });
 
     return () => unsubscribe();
@@ -534,6 +542,8 @@ export const MediaSection: React.FC<MediaSectionProps> = ({
                     if (isReel) {
                       const rIndex = reelsOnly.findIndex((r) => r.id === item.id);
                       if (rIndex !== -1) setActiveReelIndex(rIndex);
+                    } else {
+                      setFullscreenPhotoItem(item);
                     }
                   }}
                   className={`relative overflow-hidden bg-black ${
@@ -576,14 +586,16 @@ export const MediaSection: React.FC<MediaSectionProps> = ({
                     {item.type}
                   </span>
 
-                  {/* Delete button (for admin or author) */}
-                  <button
-                    onClick={(e) => handleDeleteMedia(item.id, e)}
-                    className="absolute top-2.5 right-2.5 p-1.5 bg-black/60 text-white rounded-full opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all cursor-pointer"
-                    title="Delete Media"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  {/* Delete button (only for the uploader) */}
+                  {effectiveUser && (item.authorId === effectiveUser.id || item.author === effectiveUser.name) && (
+                    <button
+                      onClick={(e) => handleDeleteMedia(item.id, e)}
+                      className="absolute top-2.5 right-2.5 p-1.5 bg-black/60 text-white rounded-full opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all cursor-pointer"
+                      title="Delete Your Media"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
 
                   {/* Bottom Video/Reel Title */}
                   <div className="absolute bottom-0 inset-x-0 p-3 bg-linear-to-t from-black/80 via-black/40 to-transparent text-white space-y-1">
@@ -1096,6 +1108,93 @@ export const MediaSection: React.FC<MediaSectionProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Fullscreen Lightbox Modal for Photos & Videos */}
+      {fullscreenPhotoItem && (
+        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 backdrop-blur-md animate-in fade-in">
+          <button
+            onClick={() => setFullscreenPhotoItem(null)}
+            className="absolute top-4 right-4 z-50 p-2.5 bg-white/10 text-white rounded-full hover:bg-white/20 transition-colors cursor-pointer"
+          >
+            <X className="w-6 h-6" />
+          </button>
+
+          <div className="relative max-w-4xl w-full max-h-[90vh] bg-black rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row border border-white/10">
+            <div className="flex-1 bg-black flex items-center justify-center relative min-h-[50vh] md:min-h-[75vh]">
+              {fullscreenPhotoItem.type === "photo" ? (
+                <img
+                  src={fullscreenPhotoItem.src}
+                  alt={fullscreenPhotoItem.caption}
+                  className="max-w-full max-h-[80vh] object-contain"
+                />
+              ) : (
+                <video
+                  src={fullscreenPhotoItem.src}
+                  controls
+                  autoPlay
+                  className="max-w-full max-h-[80vh] object-contain"
+                />
+              )}
+            </div>
+
+            {/* Sidebar with Details & Comments */}
+            <div className="w-full md:w-80 bg-white p-6 flex flex-col justify-between space-y-4">
+              <div className="space-y-4 overflow-y-auto max-h-[60vh] pr-1">
+                <div className="flex items-center gap-3 border-b border-[#1a2a40]/10 pb-4">
+                  <img
+                    src={fullscreenPhotoItem.authorAvatar || "https://www.ghibli.jp/gallery/howl005.jpg"}
+                    alt={fullscreenPhotoItem.author}
+                    className="w-10 h-10 rounded-full object-cover ring-2 ring-[#003d80]/30"
+                  />
+                  <div>
+                    <span className="text-xs font-semibold text-[#1a2a40] block">
+                      {fullscreenPhotoItem.author}
+                    </span>
+                    <span className="text-[10px] text-[#7a8fa8]">
+                      {new Date(fullscreenPhotoItem.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-xs text-[#1a2a40] leading-relaxed font-medium">
+                  {fullscreenPhotoItem.caption}
+                </p>
+
+                {fullscreenPhotoItem.tags && fullscreenPhotoItem.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {fullscreenPhotoItem.tags.map((t, idx) => (
+                      <span key={idx} className="text-[10px] text-[#0056b3] bg-[#0056b3]/10 px-2 py-0.5 rounded font-medium">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Likes & Actions */}
+              <div className="pt-4 border-t border-[#1a2a40]/10 flex items-center justify-between">
+                <button
+                  onClick={(e) => handleLike(fullscreenPhotoItem.id, e)}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#1a2a40] hover:text-red-600 transition-colors cursor-pointer"
+                >
+                  <Heart className={`w-5 h-5 ${fullscreenPhotoItem.likes > 0 ? "fill-red-500 text-red-500" : "text-[#7a8fa8]"}`} />
+                  <span>{fullscreenPhotoItem.likes} Likes</span>
+                </button>
+                <button
+                  onClick={() => {
+                    navigator.clipboard?.writeText(window.location.href);
+                    alert("Link copied!");
+                  }}
+                  className="inline-flex items-center gap-1 text-xs text-[#7a8fa8] hover:text-[#003d80] cursor-pointer"
+                >
+                  <Share2 className="w-4 h-4" />
+                  <span>Share</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

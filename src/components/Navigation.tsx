@@ -12,6 +12,8 @@ import {
   UserCheck,
   Bot,
   Sparkles,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useAuth } from "../firebase/AuthContext";
 
@@ -22,6 +24,8 @@ interface NavigationProps {
   onLogout: () => void;
   onOpenAuth: (tab?: "signin" | "signup") => void;
   onOpenProfilePic: () => void;
+  isDarkMode?: boolean;
+  onToggleTheme?: () => void;
 }
 
 export const Navigation: React.FC<NavigationProps> = ({
@@ -31,6 +35,8 @@ export const Navigation: React.FC<NavigationProps> = ({
   onLogout,
   onOpenAuth,
   onOpenProfilePic,
+  isDarkMode,
+  onToggleTheme,
 }) => {
   const { firebaseUser, studentUser, signInWithGoogle, logout: firebaseLogout } = useAuth();
 
@@ -46,30 +52,50 @@ export const Navigation: React.FC<NavigationProps> = ({
   const activeUser = studentUser || currentUser;
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#f0f4f8]/90 backdrop-blur-md border-b border-[#1a2a40]/10 transition-all">
+    <header className={`sticky top-0 z-50 w-full backdrop-blur-md border-b transition-all ${
+      isDarkMode 
+        ? "bg-[#0b1120]/90 border-slate-800 text-slate-100" 
+        : "bg-[#f0f4f8]/90 border-[#1a2a40]/10 text-[#1a2a40]"
+    }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Brand Logo */}
-        <button
-          onClick={() => onNavigate("home")}
-          className="flex items-center gap-2.5 text-left group cursor-pointer"
-        >
-          <div className="w-9 h-9 rounded-xl bg-[#003d80] text-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-            <GraduationCap className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-['Cormorant_Garamond',serif] text-xl font-semibold tracking-tight text-[#003d80]">
-                College Memories
-              </span>
-              <span className="text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-[#0056b3]/10 text-[#003d80]">
-                24–25
+        {/* Brand Logo & Upper Left Dark/Light Toggle */}
+        <div className="flex items-center gap-3">
+          {onToggleTheme && (
+            <button
+              onClick={onToggleTheme}
+              className={`p-2 rounded-xl transition-all cursor-pointer border ${
+                isDarkMode 
+                  ? "bg-slate-800 text-amber-400 border-slate-700 hover:bg-slate-700" 
+                  : "bg-white text-amber-600 border-[#1a2a40]/15 hover:bg-gray-100 shadow-2xs"
+              }`}
+              title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+          )}
+
+          <button
+            onClick={() => onNavigate("home")}
+            className="flex items-center gap-2.5 text-left group cursor-pointer"
+          >
+            <div className="w-9 h-9 rounded-xl bg-[#003d80] text-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+              <GraduationCap className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className={`font-['Cormorant_Garamond',serif] text-xl font-semibold tracking-tight ${isDarkMode ? "text-slate-100" : "text-[#003d80]"}`}>
+                  College Memories
+                </span>
+                <span className="text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-[#0056b3]/10 text-[#003d80]">
+                  24–25
+                </span>
+              </div>
+              <span className={`hidden sm:block text-[10px] font-['Noto_Sans_Kannada',sans-serif] ${isDarkMode ? "text-slate-400" : "text-[#4a5e7a]"}`}>
+                ಡಿಜಿಟಲ್ ಟೈಮ್ ಕ್ಯಾಪ್ಸೂಲ್
               </span>
             </div>
-            <span className="hidden sm:block text-[10px] text-[#4a5e7a] font-['Noto_Sans_Kannada',sans-serif]">
-              ಡಿಜಿಟಲ್ ಟೈಮ್ ಕ್ಯಾಪ್ಸೂಲ್
-            </span>
-          </div>
-        </button>
+          </button>
+        </div>
 
         {/* Section Navigation Tabs */}
         <nav className="hidden md:flex items-center gap-1 lg:gap-2">

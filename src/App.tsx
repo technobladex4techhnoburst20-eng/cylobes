@@ -11,6 +11,7 @@ import { AdminSection } from "./components/AdminSection";
 import { ApiExplorerSection } from "./components/ApiExplorerSection";
 import { StandaloneSection } from "./components/StandaloneSection";
 import { ProfilePictureModal } from "./components/ProfilePictureModal";
+import { BirthdayBanner } from "./components/BirthdayBanner";
 import { MusicPlayer } from "./components/MusicPlayer";
 import { FallingPetals3D } from "./components/FallingPetals3D";
 import { GeminiChatbot } from "./components/GeminiChatbot";
@@ -24,12 +25,19 @@ function AppContent() {
   const [isProfilePicModalOpen, setIsProfilePicModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalTab, setAuthModalTab] = useState<"signin" | "signup">("signin");
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    return localStorage.getItem("appTheme") === "dark";
+  });
   const { studentUser } = useAuth();
   
   const [bgImage, setBgImage] = useState<string | null>(null);
   const bgInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize and verify JWT session on mount
+  useEffect(() => {
+    localStorage.setItem("appTheme", isDarkMode ? "dark" : "light");
+  }, [isDarkMode]);
+
   useEffect(() => {
     // Check if token exists in localStorage
     const savedUser = authStorage.getUser();
@@ -114,9 +122,11 @@ function AppContent() {
 
   return (
     <div 
-      className="min-h-screen text-[#1a2a40] flex flex-col font-['Inter',sans-serif] selection:bg-[#003d80] selection:text-white transition-colors duration-500"
+      className={`min-h-screen flex flex-col font-['Inter',sans-serif] selection:bg-[#003d80] selection:text-white transition-colors duration-500 ${
+        isDarkMode ? "bg-[#0b1120] text-slate-100 dark" : "text-[#1a2a40]"
+      }`}
       style={{
-        backgroundColor: bgImage ? "transparent" : "#f0f4f8",
+        backgroundColor: bgImage ? "transparent" : isDarkMode ? "#0b1120" : "#f0f4f8",
         backgroundImage: bgImage ? `url(${bgImage})` : "none",
         backgroundSize: "cover",
         backgroundPosition: "center",
@@ -135,7 +145,10 @@ function AppContent() {
           onLogout={handleLogout}
           onOpenAuth={handleOpenAuth}
           onOpenProfilePic={() => setIsProfilePicModalOpen(true)}
+          isDarkMode={isDarkMode}
+          onToggleTheme={() => setIsDarkMode(!isDarkMode)}
         />
+        <BirthdayBanner />
 
         {/* Main Content View with Dynamic Routing */}
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-8 relative">

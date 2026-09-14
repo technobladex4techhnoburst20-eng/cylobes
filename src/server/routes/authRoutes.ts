@@ -188,13 +188,23 @@ authRouter.put("/profile", requireAuth, (req: AuthenticatedRequest, res: Respons
       return;
     }
 
-    const { name, phone, branch, location, bio, pronouns, avatar, isPrivate } = req.body;
+    const { username, name, phone, branch, location, dob, bio, pronouns, avatar, isPrivate } = req.body;
     const current = users[index];
 
-    if (name !== undefined) current.name = name;
+    if (username !== undefined && username !== current.username) {
+      const cleanUsername = String(username).trim();
+      const existing = users.find((u) => u.username.toLowerCase() === cleanUsername.toLowerCase() && u.id !== current.id);
+      if (existing) {
+        res.status(400).json({ error: "Username is already taken" });
+        return;
+      }
+      current.username = cleanUsername;
+    }
+    if (name !== undefined) current.name = String(name).trim();
     if (phone !== undefined) current.phone = phone;
     if (branch !== undefined) current.branch = branch;
     if (location !== undefined) current.location = location;
+    if (dob !== undefined) current.dob = dob;
     if (bio !== undefined) current.bio = bio;
     if (pronouns !== undefined) current.pronouns = pronouns;
     if (avatar !== undefined) current.avatar = avatar;
