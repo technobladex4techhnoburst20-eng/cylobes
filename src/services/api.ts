@@ -405,9 +405,23 @@ export const api = {
     return json.data;
   },
 
+  async verifyAdminKey(adminKey: string): Promise<boolean> {
+    const cleanKey = (adminKey || "").trim();
+    const res = await fetch("/api/admin/verify", {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "x-admin-key": cleanKey 
+      },
+      body: JSON.stringify({ adminKey: cleanKey }),
+    });
+    return res.ok;
+  },
+
   async getAdminUsers(adminKey: string): Promise<User[]> {
+    const cleanKey = (adminKey || "").trim();
     const res = await fetch("/api/admin/users", {
-      headers: { "x-admin-key": adminKey },
+      headers: { "x-admin-key": cleanKey },
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || "Admin authentication failed");
@@ -415,13 +429,14 @@ export const api = {
   },
 
   async toggleUserStatus(id: string, adminKey: string, status?: "active" | "blocked" | "deactivated"): Promise<void> {
+    const cleanKey = (adminKey || "").trim();
     const res = await fetch(`/api/admin/users/${encodeURIComponent(id)}/status`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        "x-admin-key": adminKey,
+        "x-admin-key": cleanKey,
       },
-      body: JSON.stringify(status ? { status } : {}),
+      body: JSON.stringify(status ? { status, adminKey: cleanKey } : { adminKey: cleanKey }),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -434,12 +449,14 @@ export const api = {
   },
 
   async deleteUser(id: string, adminKey: string): Promise<void> {
+    const cleanKey = (adminKey || "").trim();
     const res = await fetch(`/api/admin/users/${encodeURIComponent(id)}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
-        "x-admin-key": adminKey,
+        "x-admin-key": cleanKey,
       },
+      body: JSON.stringify({ adminKey: cleanKey }),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -448,8 +465,9 @@ export const api = {
   },
 
   async getReports(adminKey: string): Promise<FlaggedReport[]> {
+    const cleanKey = (adminKey || "").trim();
     const res = await fetch("/api/admin/reports", {
-      headers: { "x-admin-key": adminKey },
+      headers: { "x-admin-key": cleanKey },
     });
     const json = await res.json();
     return json.data || [];
@@ -464,15 +482,17 @@ export const api = {
   },
 
   async dismissReport(id: string, adminKey: string): Promise<void> {
+    const cleanKey = (adminKey || "").trim();
     await fetch(`/api/admin/reports/${id}`, {
       method: "DELETE",
-      headers: { "x-admin-key": adminKey },
+      headers: { "x-admin-key": cleanKey },
     });
   },
 
   async getSiteProblems(adminKey: string): Promise<SiteProblem[]> {
+    const cleanKey = (adminKey || "").trim();
     const res = await fetch("/api/admin/site-problems", {
-      headers: { "x-admin-key": adminKey },
+      headers: { "x-admin-key": cleanKey },
     });
     const json = await res.json();
     return json.data || [];
@@ -487,19 +507,22 @@ export const api = {
   },
 
   async dismissProblem(id: string, adminKey: string): Promise<void> {
+    const cleanKey = (adminKey || "").trim();
     await fetch(`/api/admin/site-problems/${id}`, {
       method: "DELETE",
-      headers: { "x-admin-key": adminKey },
+      headers: { "x-admin-key": cleanKey },
     });
   },
 
   async wipeDatabase(adminKey: string): Promise<void> {
+    const cleanKey = (adminKey || "").trim();
     const res = await fetch("/api/admin/wipe", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-admin-key": adminKey,
+        "x-admin-key": cleanKey,
       },
+      body: JSON.stringify({ adminKey: cleanKey }),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -508,9 +531,14 @@ export const api = {
   },
 
   async seedDatabase(adminKey: string): Promise<void> {
+    const cleanKey = (adminKey || "").trim();
     const res = await fetch("/api/admin/seed", {
       method: "POST",
-      headers: { "x-admin-key": adminKey },
+      headers: { 
+        "Content-Type": "application/json",
+        "x-admin-key": cleanKey 
+      },
+      body: JSON.stringify({ adminKey: cleanKey }),
     });
     if (!res.ok) throw new Error("Seed failed");
   },

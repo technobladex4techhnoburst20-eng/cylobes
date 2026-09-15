@@ -20,10 +20,13 @@ import {
   UserCheck,
   UserX,
   Ban,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 export const AdminSection: React.FC = () => {
-  const [passkey, setPasskey] = useState("");
+  const [passkey, setPasskey] = useState(() => sessionStorage.getItem("adminPasskey") || "");
+  const [showPasskey, setShowPasskey] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"moderation" | "api-docs">("moderation");
@@ -35,18 +38,48 @@ export const AdminSection: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [actionMsg, setActionMsg] = useState<string | null>(null);
 
+  // Auto-attempt login if saved in sessionStorage
+  useEffect(() => {
+    const saved = sessionStorage.getItem("adminPasskey");
+    if (saved && !isAuthenticated) {
+      tryAutoAuth(saved.trim());
+    }
+  }, []);
+
+  const tryAutoAuth = async (key: string) => {
+    try {
+      setLoading(true);
+      const resUsers = await api.getAdminUsers(key);
+      setUsers(resUsers);
+      setIsAuthenticated(true);
+      loadAllAdminData(key);
+    } catch {
+      // Stale or invalid key in session, clear it silently
+      sessionStorage.removeItem("adminPasskey");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const authenticate = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
+    const cleanKey = passkey.trim();
+    if (!cleanKey) {
+      setAuthError("Please enter the security passkey.");
+      return;
+    }
+
     try {
       setLoading(true);
       // Test passkey against admin users endpoint
-      const resUsers = await api.getAdminUsers(passkey);
+      const resUsers = await api.getAdminUsers(cleanKey);
       setUsers(resUsers);
       setIsAuthenticated(true);
-      loadAllAdminData(passkey);
+      sessionStorage.setItem("adminPasskey", cleanKey);
+      loadAllAdminData(cleanKey);
     } catch (err: any) {
-      setAuthError("Access Denied: Invalid Security Passkey.");
+      setAuthError(err?.message || "Access Denied: Invalid Security Passkey.");
     } finally {
       setLoading(false);
     }
@@ -176,17 +209,30 @@ export const AdminSection: React.FC = () => {
           className="bg-white rounded-2xl border border-[#1a2a40]/10 p-6 shadow-xs space-y-4"
         >
           <div>
-            <label className="block text-xs font-medium text-[#4a5e7a] mb-1">
-              Security Passkey
-            </label>
-            <input
-              type="password"
-              value={passkey}
-              onChange={(e) => setPasskey(e.target.value)}
-              placeholder="Enter security passkey"
-              className="w-full text-xs px-3 py-2.5 bg-[#f0f4f8] border border-[#1a2a40]/15 rounded-lg focus:outline-hidden focus:border-[#003d80]"
-              required
-            />
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-medium text-[#4a5e7a]">
+                Security Passkey
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowPasskey(!showPasskey)}
+                className="text-[11px] text-[#0056b3] hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                {showPasskey ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                {showPasskey ? "Hide" : "Show"}
+              </button>
+            </div>
+            <div className="relative">
+              <input
+                type={showPasskey ? "text" : "password"}
+                value={passkey}
+                onChange={(e) => setPasskey(e.target.value)}
+                placeholder="Enter security passkey"
+                className="w-full text-xs px-3 py-2.5 bg-[#f0f4f8] border border-[#1a2a40]/15 rounded-lg focus:outline-hidden focus:border-[#003d80] pr-10"
+                required
+                autoFocus
+              />
+            </div>
           </div>
 
           {authError && (
