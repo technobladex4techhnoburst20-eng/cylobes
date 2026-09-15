@@ -50,6 +50,12 @@ export const ProfilePictureModal: React.FC<ProfilePictureModalProps> = ({
   if (!isOpen) return null;
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!currentUser) {
+      alert("Sign In Required: Please sign in or register to set or upload a profile picture.");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -219,7 +225,13 @@ export const ProfilePictureModal: React.FC<ProfilePictureModalProps> = ({
             />
             <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => {
+                if (!currentUser) {
+                  alert("Sign In Required: Please sign in or register to set or upload a profile picture.");
+                  return;
+                }
+                fileInputRef.current?.click();
+              }}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#f0f4f8] hover:bg-[#003d80]/10 text-[#003d80] rounded-lg font-medium transition-colors cursor-pointer"
             >
               <Upload className="w-3.5 h-3.5" />
@@ -238,6 +250,10 @@ export const ProfilePictureModal: React.FC<ProfilePictureModalProps> = ({
             <button
               type="button"
               onClick={() => {
+                if (!currentUser) {
+                  alert("Sign In Required: Please sign in or register to set or upload a profile picture.");
+                  return;
+                }
                 if (customUrl.trim()) {
                   setSelectedAvatar(customUrl.trim());
                   setCustomUrl("");

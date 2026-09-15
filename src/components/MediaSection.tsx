@@ -24,6 +24,8 @@ import {
   ChevronRight,
   Disc,
   Cloud,
+  Lock,
+  LogIn,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { useAuth } from "../firebase/AuthContext";
@@ -39,11 +41,13 @@ import {
 interface MediaSectionProps {
   currentUser: User | null;
   onOpenProfilePic?: () => void;
+  onOpenAuth?: (tab?: "signin" | "signup") => void;
 }
 
 export const MediaSection: React.FC<MediaSectionProps> = ({
   currentUser,
   onOpenProfilePic,
+  onOpenAuth,
 }) => {
   const { studentUser } = useAuth();
   const effectiveUser = studentUser || currentUser;
@@ -164,6 +168,13 @@ export const MediaSection: React.FC<MediaSectionProps> = ({
 
   // Handle file selection (video or photo)
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!effectiveUser) {
+      onOpenAuth?.("signin");
+      alert("Sign In Required: You must sign in to upload photos or videos.");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -192,6 +203,12 @@ export const MediaSection: React.FC<MediaSectionProps> = ({
 
   // Start Live Camera Recording
   const startRecording = async () => {
+    if (!effectiveUser) {
+      onOpenAuth?.("signin");
+      alert("Sign In Required: You must sign in to record live reels.");
+      return;
+    }
+
     try {
       recordedChunksRef.current = [];
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -265,6 +282,12 @@ export const MediaSection: React.FC<MediaSectionProps> = ({
   // Submit new media
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!effectiveUser) {
+      onOpenAuth?.("signin");
+      alert("Sign In Required: You must sign in to post reels, videos, or photos.");
+      return;
+    }
+
     if (!uploadSrc) {
       alert("Please provide a video or photo to upload.");
       return;
@@ -322,6 +345,11 @@ export const MediaSection: React.FC<MediaSectionProps> = ({
   // Like a media item
   const handleLike = async (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
+    if (!effectiveUser) {
+      onOpenAuth?.("signin");
+      alert("Sign In Required: Please sign in to like reels or photos.");
+      return;
+    }
     try {
       // Toggle in Firestore
       toggleMediaLikeInFirestore(id, effectiveUser?.id || "anonymous").catch(() => {});
@@ -340,6 +368,11 @@ export const MediaSection: React.FC<MediaSectionProps> = ({
 
   // Post comment
   const handleAddComment = async (id: string) => {
+    if (!effectiveUser) {
+      onOpenAuth?.("signin");
+      alert("Sign In Required: Please sign in to leave comments on media.");
+      return;
+    }
     if (!commentInput.trim()) return;
     try {
       const authorName = effectiveUser?.name || "Student";
@@ -365,6 +398,11 @@ export const MediaSection: React.FC<MediaSectionProps> = ({
   // Delete media
   const handleDeleteMedia = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!effectiveUser) {
+      onOpenAuth?.("signin");
+      alert("Sign In Required: Please sign in to delete media.");
+      return;
+    }
     if (!confirm("Are you sure you want to delete this media item?")) return;
     try {
       try {
@@ -404,7 +442,14 @@ export const MediaSection: React.FC<MediaSectionProps> = ({
 
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setIsUploadOpen(true)}
+            onClick={() => {
+              if (!effectiveUser) {
+                onOpenAuth?.("signin");
+                alert("Sign In Required: You must sign in to upload reels, videos, or photos.");
+                return;
+              }
+              setIsUploadOpen(true);
+            }}
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#003d80] text-white text-xs font-semibold rounded-xl hover:bg-[#0056b3] transition-all shadow-md hover:scale-102 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
@@ -519,7 +564,14 @@ export const MediaSection: React.FC<MediaSectionProps> = ({
           <p className="font-semibold text-sm text-[#1a2a40]">No media matches found.</p>
           <p>Be the first batchmate to upload or record a video reel!</p>
           <button
-            onClick={() => setIsUploadOpen(true)}
+            onClick={() => {
+              if (!effectiveUser) {
+                onOpenAuth?.("signin");
+                alert("Sign In Required: You must sign in to upload reels, videos, or photos.");
+                return;
+              }
+              setIsUploadOpen(true);
+            }}
             className="px-4 py-2 bg-[#003d80] text-white rounded-xl hover:bg-[#0056b3] cursor-pointer"
           >
             Upload Now
@@ -894,220 +946,256 @@ export const MediaSection: React.FC<MediaSectionProps> = ({
               </p>
             </div>
 
-            {/* Media Type Chooser */}
-            <div className="grid grid-cols-3 gap-2 p-1 bg-[#f0f4f8] rounded-xl">
-              <button
-                type="button"
-                onClick={() => setUploadType("reel")}
-                className={`py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                  uploadType === "reel"
-                    ? "bg-[#003d80] text-white shadow-xs"
-                    : "text-[#4a5e7a] hover:bg-white/50"
-                }`}
-              >
-                <Film className="w-3.5 h-3.5" />
-                <span>Reel (9:16)</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setUploadType("video")}
-                className={`py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                  uploadType === "video"
-                    ? "bg-[#003d80] text-white shadow-xs"
-                    : "text-[#4a5e7a] hover:bg-white/50"
-                }`}
-              >
-                <Video className="w-3.5 h-3.5" />
-                <span>Video (16:9)</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setUploadType("photo")}
-                className={`py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                  uploadType === "photo"
-                    ? "bg-[#003d80] text-white shadow-xs"
-                    : "text-[#4a5e7a] hover:bg-white/50"
-                }`}
-              >
-                <ImageIcon className="w-3.5 h-3.5" />
-                <span>Photo</span>
-              </button>
-            </div>
-
-            <form onSubmit={handleUploadSubmit} className="space-y-4">
-              {/* File Upload & Live Camera Recording options */}
-              <div className="space-y-3">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileSelect}
-                  accept="video/*,image/*"
-                  className="hidden"
-                />
-
-                {/* Dropzone / Preview Area */}
-                <div className="border-2 border-dashed border-[#1a2a40]/20 rounded-2xl p-5 text-center bg-[#f0f4f8]/50 hover:bg-[#f0f4f8] transition-colors">
-                  {isRecording ? (
-                    <div className="space-y-3">
-                      <video
-                        ref={videoPreviewRef}
-                        className="max-h-60 mx-auto rounded-xl object-cover aspect-[9/16] bg-black"
-                        muted
-                        autoPlay
-                        playsInline
-                      />
-                      <div className="flex items-center justify-center gap-2 text-xs font-semibold text-red-600">
-                        <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-ping" />
-                        <span>Recording Live Campus Reel ({recordingTime}s)</span>
-                      </div>
-                      <div className="flex justify-center gap-2">
-                        <button
-                          type="button"
-                          onClick={stopRecording}
-                          className="px-4 py-2 bg-red-600 text-white text-xs font-semibold rounded-xl hover:bg-red-700 cursor-pointer"
-                        >
-                          Stop & Keep Clip
-                        </button>
-                        <button
-                          type="button"
-                          onClick={cancelRecording}
-                          className="px-4 py-2 bg-gray-200 text-xs font-semibold rounded-xl hover:bg-gray-300 cursor-pointer"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : uploadSrc ? (
-                    <div className="space-y-3">
-                      {uploadType === "photo" ? (
-                        <img
-                          src={uploadSrc}
-                          alt="Upload preview"
-                          className="max-h-48 mx-auto rounded-xl shadow-xs object-cover"
-                        />
-                      ) : (
-                        <video
-                          src={uploadSrc}
-                          controls
-                          className="max-h-48 mx-auto rounded-xl shadow-xs object-cover"
-                        />
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => setUploadSrc("")}
-                        className="text-xs text-red-600 hover:underline cursor-pointer"
-                      >
-                        Remove and replace media
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-3 py-2">
-                      <div className="flex items-center justify-center gap-4">
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="px-4 py-2.5 bg-white border border-[#1a2a40]/15 hover:border-[#003d80] rounded-xl text-xs font-semibold text-[#003d80] shadow-2xs flex items-center gap-2 cursor-pointer"
-                        >
-                          <Upload className="w-4 h-4" />
-                          <span>Select Video / Photo File</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={startRecording}
-                          className="px-4 py-2.5 bg-red-50 border border-red-200 hover:bg-red-100 rounded-xl text-xs font-semibold text-red-700 shadow-2xs flex items-center gap-2 cursor-pointer"
-                        >
-                          <Camera className="w-4 h-4" />
-                          <span>Record Live Reel</span>
-                        </button>
-                      </div>
-                      <p className="text-[11px] text-[#7a8fa8]">
-                        Supports MP4, WebM, MOV video clips or high-res photos up to 50MB
-                      </p>
-                    </div>
-                  )}
+            {!effectiveUser ? (
+              <div className="rounded-2xl border border-dashed border-[#003d80]/20 bg-linear-to-b from-[#f0f4f8] to-white p-8 text-center space-y-4">
+                <div className="w-12 h-12 mx-auto rounded-2xl bg-[#003d80]/10 flex items-center justify-center text-[#003d80]">
+                  <Lock className="w-6 h-6" />
                 </div>
-
-                {/* Or Paste direct URL */}
-                <div className="space-y-1">
-                  <label className="block text-[11px] font-medium text-[#4a5e7a]">
-                    Or Paste Direct Media URL (Video or Image)
-                  </label>
-                  <input
-                    type="url"
-                    value={uploadSrc.startsWith("data:") ? "" : uploadSrc}
-                    onChange={(e) => setUploadSrc(e.target.value)}
-                    placeholder="https://.../video.mp4 or photo.jpg"
-                    className="w-full text-xs px-3 py-2 bg-[#f0f4f8] border border-[#1a2a40]/15 rounded-xl focus:outline-hidden focus:border-[#003d80]"
-                  />
+                <div className="max-w-md mx-auto space-y-1">
+                  <h3 className="font-['Cormorant_Garamond',serif] text-2xl font-semibold text-[#1a2a40]">
+                    Sign In Required to Upload Media
+                  </h3>
+                  <p className="text-xs text-[#4a5e7a] leading-relaxed">
+                    You must be signed in to upload photos, reels, or videos to the campus network. Please sign in or register with your college account.
+                  </p>
                 </div>
-              </div>
-
-              {/* Caption & Submitter */}
-              <div className="space-y-3 pt-2 border-t border-[#1a2a40]/10">
-                <div>
-                  <label className="block text-xs font-medium text-[#4a5e7a] mb-1">
-                    Caption / Reel Story
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={uploadCaption}
-                    onChange={(e) => setUploadCaption(e.target.value)}
-                    placeholder="What happened in this clip? e.g. Final day countdown at canteen stairs..."
-                    className="w-full text-xs px-3 py-2 bg-[#f0f4f8] border border-[#1a2a40]/15 rounded-xl focus:outline-hidden focus:border-[#003d80]"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-[#4a5e7a] mb-1">
-                      Author / Submitter
-                    </label>
-                    <input
-                      type="text"
-                      value={uploadAuthor}
-                      onChange={(e) => setUploadAuthor(e.target.value)}
-                      placeholder="e.g. Arjun Rao"
-                      className="w-full text-xs px-3 py-2 bg-[#f0f4f8] border border-[#1a2a40]/15 rounded-xl focus:outline-hidden focus:border-[#003d80]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-[#4a5e7a] mb-1">
-                      Tags (space-separated)
-                    </label>
-                    <input
-                      type="text"
-                      value={uploadTags}
-                      onChange={(e) => setUploadTags(e.target.value)}
-                      placeholder="#CampusReels #Farewell #Fest"
-                      className="w-full text-xs px-3 py-2 bg-[#f0f4f8] border border-[#1a2a40]/15 rounded-xl focus:outline-hidden focus:border-[#003d80]"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="pt-4 border-t border-[#1a2a40]/10 flex items-center justify-between gap-3">
                 <button
                   type="button"
-                  onClick={() => setIsUploadOpen(false)}
-                  className="px-4 py-2 text-xs font-medium text-[#4a5e7a] hover:bg-[#f0f4f8] rounded-xl cursor-pointer"
+                  onClick={() => {
+                    setIsUploadOpen(false);
+                    onOpenAuth?.("signin");
+                  }}
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-linear-to-r from-[#003d80] to-[#0056b3] text-white text-xs font-semibold hover:brightness-110 shadow-sm cursor-pointer transition-all"
                 >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={uploading || !uploadSrc}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#003d80] text-white text-xs font-semibold rounded-xl hover:bg-[#0056b3] transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  <span>{uploading ? "Publishing..." : "Post Publicly to Campus Feed"}</span>
+                  <LogIn className="w-4 h-4" />
+                  <span>Sign In / Register Now</span>
                 </button>
               </div>
-            </form>
+            ) : (
+              <>
+                {/* Media Type Chooser */}
+                <div className="grid grid-cols-3 gap-2 p-1 bg-[#f0f4f8] rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setUploadType("reel")}
+                    className={`py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      uploadType === "reel"
+                        ? "bg-[#003d80] text-white shadow-xs"
+                        : "text-[#4a5e7a] hover:bg-white/50"
+                    }`}
+                  >
+                    <Film className="w-3.5 h-3.5" />
+                    <span>Reel (9:16)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUploadType("video")}
+                    className={`py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      uploadType === "video"
+                        ? "bg-[#003d80] text-white shadow-xs"
+                        : "text-[#4a5e7a] hover:bg-white/50"
+                    }`}
+                  >
+                    <Video className="w-3.5 h-3.5" />
+                    <span>Video (16:9)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUploadType("photo")}
+                    className={`py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      uploadType === "photo"
+                        ? "bg-[#003d80] text-white shadow-xs"
+                        : "text-[#4a5e7a] hover:bg-white/50"
+                    }`}
+                  >
+                    <ImageIcon className="w-3.5 h-3.5" />
+                    <span>Photo</span>
+                  </button>
+                </div>
+
+                <form onSubmit={handleUploadSubmit} className="space-y-4">
+                  {/* File Upload & Live Camera Recording options */}
+                  <div className="space-y-3">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileSelect}
+                      accept="video/*,image/*"
+                      className="hidden"
+                    />
+
+                    {/* Dropzone / Preview Area */}
+                    <div className="border-2 border-dashed border-[#1a2a40]/20 rounded-2xl p-5 text-center bg-[#f0f4f8]/50 hover:bg-[#f0f4f8] transition-colors">
+                      {isRecording ? (
+                        <div className="space-y-3">
+                          <video
+                            ref={videoPreviewRef}
+                            className="max-h-60 mx-auto rounded-xl object-cover aspect-[9/16] bg-black"
+                            muted
+                            autoPlay
+                            playsInline
+                          />
+                          <div className="flex items-center justify-center gap-2 text-xs font-semibold text-red-600">
+                            <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-ping" />
+                            <span>Recording Live Campus Reel ({recordingTime}s)</span>
+                          </div>
+                          <div className="flex justify-center gap-2">
+                            <button
+                              type="button"
+                              onClick={stopRecording}
+                              className="px-4 py-2 bg-red-600 text-white text-xs font-semibold rounded-xl hover:bg-red-700 cursor-pointer"
+                            >
+                              Stop & Keep Clip
+                            </button>
+                            <button
+                              type="button"
+                              onClick={cancelRecording}
+                              className="px-4 py-2 bg-gray-200 text-xs font-semibold rounded-xl hover:bg-gray-300 cursor-pointer"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : uploadSrc ? (
+                        <div className="space-y-3">
+                          {uploadType === "photo" ? (
+                            <img
+                              src={uploadSrc}
+                              alt="Upload preview"
+                              className="max-h-48 mx-auto rounded-xl shadow-xs object-cover"
+                            />
+                          ) : (
+                            <video
+                              src={uploadSrc}
+                              controls
+                              className="max-h-48 mx-auto rounded-xl shadow-xs object-cover"
+                            />
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setUploadSrc("")}
+                            className="text-xs text-red-600 hover:underline cursor-pointer"
+                          >
+                            Remove and replace media
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="space-y-3 py-2">
+                          <div className="flex items-center justify-center gap-4">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!effectiveUser) {
+                                  onOpenAuth?.("signin");
+                                  alert("Sign In Required: You must sign in to upload photos or videos.");
+                                  return;
+                                }
+                                fileInputRef.current?.click();
+                              }}
+                              className="px-4 py-2.5 bg-white border border-[#1a2a40]/15 hover:border-[#003d80] rounded-xl text-xs font-semibold text-[#003d80] shadow-2xs flex items-center gap-2 cursor-pointer"
+                            >
+                              <Upload className="w-4 h-4" />
+                              <span>Select Video / Photo File</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={startRecording}
+                              className="px-4 py-2.5 bg-red-50 border border-red-200 hover:bg-red-100 rounded-xl text-xs font-semibold text-red-700 shadow-2xs flex items-center gap-2 cursor-pointer"
+                            >
+                              <Camera className="w-4 h-4" />
+                              <span>Record Live Reel</span>
+                            </button>
+                          </div>
+                          <p className="text-[11px] text-[#7a8fa8]">
+                            Supports MP4, WebM, MOV video clips or high-res photos up to 50MB
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Or Paste direct URL */}
+                    <div className="space-y-1">
+                      <label className="block text-[11px] font-medium text-[#4a5e7a]">
+                        Or Paste Direct Media URL (Video or Image)
+                      </label>
+                      <input
+                        type="url"
+                        value={uploadSrc.startsWith("data:") ? "" : uploadSrc}
+                        onChange={(e) => setUploadSrc(e.target.value)}
+                        placeholder="https://.../video.mp4 or photo.jpg"
+                        className="w-full text-xs px-3 py-2 bg-[#f0f4f8] border border-[#1a2a40]/15 rounded-xl focus:outline-hidden focus:border-[#003d80]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Caption & Submitter */}
+                  <div className="space-y-3 pt-2 border-t border-[#1a2a40]/10">
+                    <div>
+                      <label className="block text-xs font-medium text-[#4a5e7a] mb-1">
+                        Caption / Reel Story
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={uploadCaption}
+                        onChange={(e) => setUploadCaption(e.target.value)}
+                        placeholder="What happened in this clip? e.g. Final day countdown at canteen stairs..."
+                        className="w-full text-xs px-3 py-2 bg-[#f0f4f8] border border-[#1a2a40]/15 rounded-xl focus:outline-hidden focus:border-[#003d80]"
+                        required
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-[#4a5e7a] mb-1">
+                          Author / Submitter
+                        </label>
+                        <input
+                          type="text"
+                          value={uploadAuthor}
+                          onChange={(e) => setUploadAuthor(e.target.value)}
+                          placeholder="e.g. Arjun Rao"
+                          className="w-full text-xs px-3 py-2 bg-[#f0f4f8] border border-[#1a2a40]/15 rounded-xl focus:outline-hidden focus:border-[#003d80]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-[#4a5e7a] mb-1">
+                          Tags (space-separated)
+                        </label>
+                        <input
+                          type="text"
+                          value={uploadTags}
+                          onChange={(e) => setUploadTags(e.target.value)}
+                          placeholder="#CampusReels #Farewell #Fest"
+                          className="w-full text-xs px-3 py-2 bg-[#f0f4f8] border border-[#1a2a40]/15 rounded-xl focus:outline-hidden focus:border-[#003d80]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="pt-4 border-t border-[#1a2a40]/10 flex items-center justify-between gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setIsUploadOpen(false)}
+                      className="px-4 py-2 text-xs font-medium text-[#4a5e7a] hover:bg-[#f0f4f8] rounded-xl cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      type="submit"
+                      disabled={uploading || !uploadSrc}
+                      className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#003d80] text-white text-xs font-semibold rounded-xl hover:bg-[#0056b3] transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      <span>{uploading ? "Publishing..." : "Post Publicly to Campus Feed"}</span>
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
           </div>
         </div>
       )}

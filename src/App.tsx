@@ -68,7 +68,15 @@ function AppContent() {
     setIsAuthModalOpen(true);
   };
 
+  const effectiveUser = studentUser || currentUser;
+
   const handleBgUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!effectiveUser) {
+      handleOpenAuth("signin");
+      alert("Sign In Required: You must sign in to customize the app background.");
+      if (bgInputRef.current) bgInputRef.current.value = "";
+      return;
+    }
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -117,8 +125,6 @@ function AppContent() {
     setBgImage(null);
     localStorage.removeItem("customAppBackground");
   };
-
-  const effectiveUser = studentUser || currentUser;
 
   return (
     <div 
@@ -216,7 +222,14 @@ function AppContent() {
       {/* Change Background Floating Button */}
       <div className="fixed bottom-4 left-4 z-40 flex items-center gap-2">
         <button
-          onClick={() => bgInputRef.current?.click()}
+          onClick={() => {
+            if (!effectiveUser) {
+              handleOpenAuth("signin");
+              alert("Sign In Required: You must sign in to customize the app background.");
+              return;
+            }
+            bgInputRef.current?.click();
+          }}
           className="flex items-center gap-1.5 px-3 py-2 bg-white/90 backdrop-blur-md border border-[#1a2a40]/15 rounded-full shadow-lg text-xs font-medium text-[#1a2a40] hover:bg-[#003d80] hover:text-white transition-colors cursor-pointer"
           title="Change Background Image"
         >
