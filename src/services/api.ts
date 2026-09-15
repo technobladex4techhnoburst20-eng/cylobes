@@ -59,6 +59,18 @@ function getHeaders(extraHeaders: Record<string, string> = {}): HeadersInit {
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
+  const user = authStorage.getUser();
+  if (user?.id) {
+    headers["x-user-id"] = user.id;
+  } else {
+    try {
+      const fbStored = localStorage.getItem("college_user");
+      if (fbStored) {
+        const parsed = JSON.parse(fbStored);
+        if (parsed?.id) headers["x-user-id"] = parsed.id;
+      }
+    } catch {}
+  }
   return headers;
 }
 

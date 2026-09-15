@@ -1,6 +1,6 @@
 import { Router, Response } from "express";
 import { db, MemoryRecord } from "../db";
-import { optionalAuth, AuthenticatedRequest } from "../middleware/auth";
+import { requireAuth, AuthenticatedRequest } from "../middleware/auth";
 
 export const memoriesRouter = Router();
 
@@ -23,8 +23,8 @@ memoriesRouter.get("/:id", (req, res: Response) => {
   res.json({ success: true, data: memory });
 });
 
-// 3. CREATE
-memoriesRouter.post("/", optionalAuth, (req: AuthenticatedRequest, res: Response) => {
+// 3. CREATE (Requires Authentication)
+memoriesRouter.post("/", requireAuth, (req: AuthenticatedRequest, res: Response) => {
   const { src, caption, author } = req.body;
 
   if (!src) {
@@ -47,8 +47,8 @@ memoriesRouter.post("/", optionalAuth, (req: AuthenticatedRequest, res: Response
   res.status(201).json({ success: true, message: "Memory added to Yearbook", data: newMem });
 });
 
-// 4. UPDATE CAPTION
-memoriesRouter.put("/:id", (req, res: Response) => {
+// 4. UPDATE CAPTION (Requires Authentication)
+memoriesRouter.put("/:id", requireAuth, (req: AuthenticatedRequest, res: Response) => {
   const { caption } = req.body;
   const memories = db.get("memories");
   const index = memories.findIndex((m) => m.id === req.params.id);
@@ -64,8 +64,8 @@ memoriesRouter.put("/:id", (req, res: Response) => {
   res.json({ success: true, message: "Caption updated", data: memories[index] });
 });
 
-// 5. DELETE
-memoriesRouter.delete("/:id", (req, res: Response) => {
+// 5. DELETE (Requires Authentication)
+memoriesRouter.delete("/:id", requireAuth, (req: AuthenticatedRequest, res: Response) => {
   const memories = db.get("memories");
   const index = memories.findIndex((m) => m.id === req.params.id);
 

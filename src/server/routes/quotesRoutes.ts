@@ -52,8 +52,8 @@ quotesRouter.get("/:id", (req, res: Response) => {
   res.json({ success: true, data: quote });
 });
 
-// 3. CREATE (Authenticated or Guest with Name)
-quotesRouter.post("/", optionalAuth, (req: AuthenticatedRequest, res: Response) => {
+// 3. CREATE (Requires Authentication)
+quotesRouter.post("/", requireAuth, (req: AuthenticatedRequest, res: Response) => {
   const { author, text, category, imageUrl, animeTitle, character } = req.body;
 
   if (!text || !text.trim()) {
@@ -61,7 +61,7 @@ quotesRouter.post("/", optionalAuth, (req: AuthenticatedRequest, res: Response) 
     return;
   }
 
-  const finalAuthor = req.user ? req.user.name : (author?.trim() || "Anonymous Otaku");
+  const finalAuthor = req.user ? req.user.name : (author?.trim() || "Batchmate");
   const newQuote: QuoteRecord = {
     id: "q-" + Math.random().toString(36).substring(2, 9),
     author: finalAuthor,
@@ -133,8 +133,8 @@ quotesRouter.put("/:id", requireAuth, (req: AuthenticatedRequest, res: Response)
   });
 });
 
-// 5. DELETE (Delete operation)
-quotesRouter.delete("/:id", optionalAuth, (req: AuthenticatedRequest, res: Response) => {
+// 5. DELETE (Requires Authentication)
+quotesRouter.delete("/:id", requireAuth, (req: AuthenticatedRequest, res: Response) => {
   const quotes = db.get("quotes");
   const index = quotes.findIndex((q) => q.id === req.params.id);
 

@@ -1,0 +1,78 @@
+{
+  "users": [],
+  "quotes": [],
+  "publicMessages": [],
+  "privateMessages": [],
+  "confessions": [
+    {
+      "id": "conf-1",
+      "text": "I was the one who accidentally triggered the chemistry lab smoke alarm in 3rd semester and blamed the faulty bunsen burner.",
+      "timestamp": 1788872617513
+    },
+    {
+      "id": "conf-2",
+      "text": "To the person who returned my lost laptop bag in the library during finals week without leaving their name: you saved my degree.",
+      "timestamp": 1789218217513
+    }
+  ],
+  "memories": [
+    {
+      "id": "mem-1",
+      "src": "https://www.ghibli.jp/gallery/mimi014.jpg",
+      "caption": "Library all-nighters before internal exams ♡ (Whisper of the Heart)",
+      "author": "Batch Archive",
+      "createdAt": 1788181417513
+    },
+    {
+      "id": "mem-2",
+      "src": "https://www.ghibli.jp/gallery/kokurikozaka022.jpg",
+      "caption": "Campus annual fest victory celebration 🏆 (From Up on Poppy Hill)",
+      "author": "Batch Archive",
+      "createdAt": 1788440617513
+    },
+    {
+      "id": "mem-3",
+      "src": "https://www.ghibli.jp/gallery/kokurikozaka001.jpg",
+      "caption": "Last day of semester lectures at the Latin Quarter hall ☀️",
+      "author": "Batch Archive",
+      "createdAt": 1788786217513
+    }
+  ],
+  "media": [
+    {
+      "id": "med-mu2or258-rv77",
+      "type": "reel",
+      "src": "https://example.com/video.mp4",
+      "caption": "Graduation reel test",
+      "author": "Graduating Senior",
+      "authorId": "sample_user",
+      "authorAvatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80",
+      "likes": 0,
+      "likedBy": [],
+      "comments": [],
+      "aspectRatio": "9:16",
+      "tags": [],
+      "createdAt": 1789477585820
+    }
+  ],
+  "chatRequests": [
+    {
+      "id": "req-1",
+      "senderId": "USR-ROOT1",
+      "recipientId": "USR-PRY2",
+      "status": "accepted",
+      "createdAt": 1789045417513,
+      "updatedAt": 1789045417513
+    },
+    {
+      "id": "req-2",
+      "senderId": "USR-ROH3",
+      "recipientId": "USR-ROOT1",
+      "status": "pending",
+      "createdAt": 1789466617513,
+      "updatedAt": 1789466617513
+    }
+  ],
+  "reports": [],
+  "siteProblems": []
+}

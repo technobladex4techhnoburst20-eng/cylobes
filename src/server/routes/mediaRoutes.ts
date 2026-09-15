@@ -1,6 +1,6 @@
 import { Router, Response } from "express";
 import { db, MediaRecord, MediaCommentRecord } from "../db";
-import { AuthenticatedRequest, optionalAuth } from "../middleware/auth";
+import { AuthenticatedRequest, optionalAuth, requireAuth } from "../middleware/auth";
 
 export const mediaRouter = Router();
 
@@ -53,8 +53,8 @@ mediaRouter.get("/:id", (req, res: Response) => {
   res.json({ success: true, data: item });
 });
 
-// 3. POST NEW MEDIA (Reel, Video, or Photo - public for all)
-mediaRouter.post("/", optionalAuth, (req: AuthenticatedRequest, res: Response) => {
+// 3. POST NEW MEDIA (Reel, Video, or Photo - Requires Authentication)
+mediaRouter.post("/", requireAuth, (req: AuthenticatedRequest, res: Response) => {
   const { type, src, thumbnail, caption, author, aspectRatio, tags } = req.body;
 
   if (!src || !type) {
@@ -140,8 +140,8 @@ mediaRouter.post("/:id/like", optionalAuth, (req: AuthenticatedRequest, res: Res
   });
 });
 
-// 5. POST COMMENT ON MEDIA
-mediaRouter.post("/:id/comment", optionalAuth, (req: AuthenticatedRequest, res: Response) => {
+// 5. POST COMMENT ON MEDIA (Requires Authentication)
+mediaRouter.post("/:id/comment", requireAuth, (req: AuthenticatedRequest, res: Response) => {
   const { text, authorName } = req.body;
 
   if (!text || !text.trim()) {
@@ -185,8 +185,8 @@ mediaRouter.post("/:id/comment", optionalAuth, (req: AuthenticatedRequest, res: 
   });
 });
 
-// 6. DELETE MEDIA
-mediaRouter.delete("/:id", optionalAuth, (req: AuthenticatedRequest, res: Response) => {
+// 6. DELETE MEDIA (Requires Authentication)
+mediaRouter.delete("/:id", requireAuth, (req: AuthenticatedRequest, res: Response) => {
   const media = db.get("media") || [];
   const index = media.findIndex((m) => m.id === req.params.id);
 

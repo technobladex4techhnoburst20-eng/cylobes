@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Memory, User } from "../types";
 import { api } from "../services/api";
+import { useAuth } from "../firebase/AuthContext";
 import {
   Camera,
   Upload,
@@ -11,20 +12,26 @@ import {
   Edit2,
   Check,
   X,
+  Lock,
+  LogIn,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 
 interface YearbookSectionProps {
   currentUser: User | null;
+  onOpenAuth?: (tab?: "signin" | "signup") => void;
 }
 
-export const YearbookSection: React.FC<YearbookSectionProps> = ({ currentUser }) => {
+export const YearbookSection: React.FC<YearbookSectionProps> = ({ currentUser, onOpenAuth }) => {
+  const { studentUser } = useAuth();
+  const effectiveUser = studentUser || currentUser;
+
   const [memories, setMemories] = useState<Memory[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Form input states
   const [captionInput, setCaptionInput] = useState("");
-  const [authorInput, setAuthorInput] = useState(currentUser?.name || "");
+  const [authorInput, setAuthorInput] = useState(effectiveUser?.name || "");
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -50,13 +57,18 @@ export const YearbookSection: React.FC<YearbookSectionProps> = ({ currentUser })
   }, []);
 
   useEffect(() => {
-    if (currentUser) {
-      setAuthorInput(currentUser.name);
+    if (effectiveUser?.name) {
+      setAuthorInput(effectiveUser.name);
     }
-  }, [currentUser]);
+  }, [effectiveUser]);
 
-  // Handle file select or drag drop
+  // Handle file select or drag drop with authentication guard
   const handleFile = (file: File) => {
+    if (!effectiveUser) {
+      onOpenAuth?.("signin");
+      alert("Sign In Required: You must sign in to upload photos to the yearbook.");
+      return;
+    }
     if (!file.type.startsWith("image/")) {
       alert("Please upload a valid image file.");
       return;
@@ -69,6 +81,11 @@ export const YearbookSection: React.FC<YearbookSectionProps> = ({ currentUser })
   };
 
   const onFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!effectiveUser) {
+      onOpenAuth?.("signin");
+      alert("Sign In Required: You must sign in to upload photos.");
+      return;
+    }
     if (e.target.files && e.target.files[0]) {
       handleFile(e.target.files[0]);
     }
@@ -76,14 +93,24 @@ export const YearbookSection: React.FC<YearbookSectionProps> = ({ currentUser })
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    if (!effectiveUser) {
+      onOpenAuth?.("signin");
+      alert("Sign In Required: You must sign in to upload photos.");
+      return;
+    }
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFile(e.dataTransfer.files[0]);
     }
   };
 
-  // Submit new photo (POST /api/memories)
+  // Submit new photo (POST /api/memories) with authentication guard
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!effectiveUser) {
+      onOpenAuth?.("signin");
+      alert("Sign In Required: You must sign in to upload photos to the yearbook.");
+      return;
+    }
     if (!previewImage) {
       alert("Please choose a photo to plant in the garden!");
       return;
@@ -108,8 +135,13 @@ export const YearbookSection: React.FC<YearbookSectionProps> = ({ currentUser })
     }
   };
 
-  // Delete memory (DELETE /api/memories/:id)
+  // Delete memory (DELETE /api/memories/:id) with authentication guard
   const handleDelete = async (id: string) => {
+    if (!effectiveUser) {
+      onOpenAuth?.("signin");
+      alert("Sign In Required: You must sign in to remove photos from the Yearbook.");
+      return;
+    }
     if (!confirm("Are you sure you want to remove this photo from the Yearbook?")) return;
     try {
       await api.deleteMemory(id);
@@ -119,8 +151,13 @@ export const YearbookSection: React.FC<YearbookSectionProps> = ({ currentUser })
     }
   };
 
-  // Update caption (PUT /api/memories/:id)
+  // Update caption (PUT /api/memories/:id) with authentication guard
   const handleSaveCaption = async (id: string) => {
+    if (!effectiveUser) {
+      onOpenAuth?.("signin");
+      alert("Sign In Required: You must sign in to edit photo captions.");
+      return;
+    }
     try {
       const updated = await api.updateMemory(id, editCaption);
       setMemories(memories.map((m) => (m.id === id ? updated : m)));
@@ -154,83 +191,107 @@ export const YearbookSection: React.FC<YearbookSectionProps> = ({ currentUser })
           </h2>
         </div>
 
-        <form onSubmit={handleUpload} className="space-y-4">
-          {/* Dropzone */}
-          <div
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={onDrop}
-            onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-[#1a2a40]/20 hover:border-[#003d80] rounded-xl p-6 text-center cursor-pointer transition-colors bg-[#f0f4f8]/50 hover:bg-[#f0f4f8]"
-          >
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={onFileInputChange}
-              accept="image/*"
-              className="hidden"
-            />
-            {previewImage ? (
-              <div className="space-y-2">
-                <img
-                  src={previewImage}
-                  alt="Preview"
-                  className="max-h-48 mx-auto rounded-lg shadow-sm object-cover"
-                />
-                <p className="text-xs text-[#0056b3] font-medium">
-                  Click or drop another file to replace
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2 py-4">
-                <Upload className="w-8 h-8 text-[#7a8fa8] mx-auto" />
-                <p className="text-xs font-semibold text-[#1a2a40]">
-                  Drag and drop a photo here, or click to browse
-                </p>
-                <p className="text-[11px] text-[#7a8fa8]">
-                  Supports PNG, JPG, WEBP formats up to 10MB
-                </p>
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-[#4a5e7a] mb-1">
-                Batchmate / Submitter
-              </label>
-              <input
-                type="text"
-                value={authorInput}
-                onChange={(e) => setAuthorInput(e.target.value)}
-                placeholder="e.g. Priya Hegde"
-                className="w-full text-xs px-3 py-2 bg-[#f0f4f8] border border-[#1a2a40]/15 rounded-lg focus:outline-hidden focus:border-[#003d80]"
-              />
+        {!effectiveUser ? (
+          <div className="rounded-xl border border-dashed border-[#003d80]/20 bg-linear-to-b from-[#f0f4f8] to-white p-8 text-center space-y-4">
+            <div className="w-12 h-12 mx-auto rounded-2xl bg-[#003d80]/10 flex items-center justify-center text-[#003d80]">
+              <Lock className="w-6 h-6" />
             </div>
-            <div>
-              <label className="block text-xs font-medium text-[#4a5e7a] mb-1">
-                Caption / Story behind the photo
-              </label>
-              <input
-                type="text"
-                value={captionInput}
-                onChange={(e) => setCaptionInput(e.target.value)}
-                placeholder="e.g. Canteen samosa party after 4th sem finals"
-                className="w-full text-xs px-3 py-2 bg-[#f0f4f8] border border-[#1a2a40]/15 rounded-lg focus:outline-hidden focus:border-[#003d80]"
-              />
+            <div className="max-w-md mx-auto space-y-1">
+              <h3 className="font-['Cormorant_Garamond',serif] text-2xl font-semibold text-[#1a2a40]">
+                Sign In Required to Upload Photos
+              </h3>
+              <p className="text-xs text-[#4a5e7a] leading-relaxed">
+                Only registered students and batchmates can post or plant memory pictures in the campus yearbook. Please sign in to share your photos.
+              </p>
             </div>
-          </div>
-
-          <div className="flex justify-end pt-2">
             <button
-              type="submit"
-              disabled={uploading || !previewImage}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#003d80] text-white text-xs font-medium rounded-lg hover:bg-[#0056b3] transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
+              type="button"
+              onClick={() => onOpenAuth?.("signin")}
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-linear-to-r from-[#003d80] to-[#0056b3] text-white text-xs font-semibold hover:brightness-110 shadow-sm cursor-pointer transition-all"
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>{uploading ? "Uploading Memory..." : "Pin Polaroid to Board"}</span>
+              <LogIn className="w-4 h-4" />
+              <span>Sign In / Register to Upload Photos</span>
             </button>
           </div>
-        </form>
+        ) : (
+          <form onSubmit={handleUpload} className="space-y-4">
+            {/* Dropzone */}
+            <div
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={onDrop}
+              onClick={() => fileInputRef.current?.click()}
+              className="border-2 border-dashed border-[#1a2a40]/20 hover:border-[#003d80] rounded-xl p-6 text-center cursor-pointer transition-colors bg-[#f0f4f8]/50 hover:bg-[#f0f4f8]"
+            >
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={onFileInputChange}
+                accept="image/*"
+                className="hidden"
+              />
+              {previewImage ? (
+                <div className="space-y-2">
+                  <img
+                    src={previewImage}
+                    alt="Preview"
+                    className="max-h-48 mx-auto rounded-lg shadow-sm object-cover"
+                  />
+                  <p className="text-xs text-[#0056b3] font-medium">
+                    Click or drop another file to replace
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2 py-4">
+                  <Upload className="w-8 h-8 text-[#7a8fa8] mx-auto" />
+                  <p className="text-xs font-semibold text-[#1a2a40]">
+                    Drag and drop a photo here, or click to browse
+                  </p>
+                  <p className="text-[11px] text-[#7a8fa8]">
+                    Supports PNG, JPG, WEBP formats up to 10MB
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-[#4a5e7a] mb-1">
+                  Batchmate / Submitter
+                </label>
+                <input
+                  type="text"
+                  value={authorInput}
+                  onChange={(e) => setAuthorInput(e.target.value)}
+                  placeholder="e.g. Priya Hegde"
+                  className="w-full text-xs px-3 py-2 bg-[#f0f4f8] border border-[#1a2a40]/15 rounded-lg focus:outline-hidden focus:border-[#003d80]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-[#4a5e7a] mb-1">
+                  Caption / Story behind the photo
+                </label>
+                <input
+                  type="text"
+                  value={captionInput}
+                  onChange={(e) => setCaptionInput(e.target.value)}
+                  placeholder="e.g. Canteen samosa party after 4th sem finals"
+                  className="w-full text-xs px-3 py-2 bg-[#f0f4f8] border border-[#1a2a40]/15 rounded-lg focus:outline-hidden focus:border-[#003d80]"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="submit"
+                disabled={uploading || !previewImage}
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#003d80] text-white text-xs font-medium rounded-lg hover:bg-[#0056b3] transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>{uploading ? "Uploading Memory..." : "Pin Polaroid to Board"}</span>
+              </button>
+            </div>
+          </form>
+        )}
       </div>
 
       {/* Data Display: Polaroid Photo Grid */}
@@ -325,6 +386,11 @@ export const YearbookSection: React.FC<YearbookSectionProps> = ({ currentUser })
                         </div>
                         <button
                           onClick={() => {
+                            if (!effectiveUser) {
+                              onOpenAuth?.("signin");
+                              alert("Sign In Required: You must sign in to edit photo captions.");
+                              return;
+                            }
                             setEditingId(mem.id);
                             setEditCaption(mem.caption);
                           }}

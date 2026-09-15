@@ -159,7 +159,10 @@ function AppContent() {
         {currentSection === "gemini-chat" && <GeminiChatbot />}
 
         {currentSection === "notes" && (
-          <NotesSection currentUser={effectiveUser as any} />
+          <NotesSection
+            currentUser={effectiveUser as any}
+            onOpenAuth={handleOpenAuth}
+          />
         )}
 
         {currentSection === "chats" && (
@@ -171,13 +174,17 @@ function AppContent() {
         )}
 
         {currentSection === "yearbook" && (
-          <YearbookSection currentUser={effectiveUser as any} />
+          <YearbookSection
+            currentUser={effectiveUser as any}
+            onOpenAuth={handleOpenAuth}
+          />
         )}
 
         {currentSection === "media" && (
           <MediaSection
             currentUser={effectiveUser as any}
             onOpenProfilePic={() => setIsProfilePicModalOpen(true)}
+            onOpenAuth={handleOpenAuth}
           />
         )}
 

@@ -31,6 +31,8 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Shuffle,
+  Lock,
+  LogIn,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import {
@@ -46,6 +48,7 @@ import {
 
 interface NotesSectionProps {
   currentUser: User | null;
+  onOpenAuth?: (tab?: "signin" | "signup") => void;
 }
 
 // Popular primary categories with dedicated icons
@@ -70,7 +73,7 @@ const POPULAR_CATEGORIES = [
 
 const PAGE_SIZE = 24;
 
-export const NotesSection: React.FC<NotesSectionProps> = ({ currentUser }) => {
+export const NotesSection: React.FC<NotesSectionProps> = ({ currentUser, onOpenAuth }) => {
   const { studentUser } = useAuth();
   const effectiveUser = studentUser || currentUser;
 
@@ -189,6 +192,11 @@ export const NotesSection: React.FC<NotesSectionProps> = ({ currentUser }) => {
 
   // AI Quote / Anime quote generation using Gemini API
   const handleAIGenerateQuote = async () => {
+    if (!effectiveUser) {
+      onOpenAuth?.("signin");
+      setFeedbackMsg("Sign In Required: Please sign in with your student account to use the AI Quote Generator.");
+      return;
+    }
     setAiGenerating(true);
     try {
       const prompt = `Give me a famous or profound anime quote related to the category "${aiPromptTopic}".
@@ -256,6 +264,11 @@ Return a JSON object in this exact format:
   // Handle Create Quote (POST /api/quotes & Cloud Firestore)
   const handleCreateQuote = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!effectiveUser) {
+      onOpenAuth?.("signin");
+      setFeedbackMsg("Sign In Required: You must sign in to pin quotes to the Wall.");
+      return;
+    }
     if (!textInput.trim()) return;
 
     try {
@@ -322,6 +335,11 @@ Return a JSON object in this exact format:
 
   // Handle Delete Quote (DELETE /api/quotes/:id)
   const handleDeleteQuote = async (id: string) => {
+    if (!effectiveUser) {
+      onOpenAuth?.("signin");
+      alert("Sign In Required: Please sign in to remove quotes.");
+      return;
+    }
     if (!confirm("Are you sure you want to remove this quote?")) return;
     try {
       try {
@@ -344,6 +362,11 @@ Return a JSON object in this exact format:
 
   // Handle Update Quote (PUT /api/quotes/:id)
   const startEdit = (quote: Quote) => {
+    if (!effectiveUser) {
+      onOpenAuth?.("signin");
+      alert("Sign In Required: Please sign in to edit quotes.");
+      return;
+    }
     setEditingId(quote.id);
     setEditText(quote.text);
     setEditAuthor(quote.author);
@@ -647,139 +670,165 @@ Return a JSON object in this exact format:
 
         {/* AI Quote Generator & Custom Creation Accordion Card */}
         <div className="bg-white rounded-2xl border border-[#1a2a40]/12 p-6 sm:p-8 shadow-xs space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#1a2a40]/10">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-indigo-500 to-[#003d80] text-white flex items-center justify-center shadow-xs">
-                <QuoteIcon className="w-5 h-5" />
+          {!effectiveUser ? (
+            <div className="rounded-xl border border-dashed border-[#003d80]/20 bg-linear-to-b from-[#f0f4f8] to-white p-8 sm:p-10 text-center space-y-4">
+              <div className="w-12 h-12 mx-auto rounded-2xl bg-[#003d80]/10 flex items-center justify-center text-[#003d80]">
+                <Lock className="w-6 h-6" />
               </div>
-              <div>
-                <h3 className="font-['Cormorant_Garamond',serif] text-2xl font-semibold text-[#1a2a40]">
-                  Share an Anime Quote or Memory
-                </h3>
-                <p className="text-xs text-[#7a8fa8]">
-                  Add your favorite anime character dialogue, picture, and series name.
+              <div className="max-w-md mx-auto space-y-1">
+                <h4 className="font-['Cormorant_Garamond',serif] text-2xl font-semibold text-[#1a2a40]">
+                  Sign In Required to Add Quotes
+                </h4>
+                <p className="text-xs text-[#4a5e7a] leading-relaxed">
+                  Only signed-in students and classmates have access to add quotes, anime thoughts, or use the AI Quote Generator on the Wall of Thoughts.
                 </p>
               </div>
-            </div>
-
-            {/* AI Generator Control */}
-            <div className="flex items-center gap-2 bg-[#f0f4f8] p-1.5 rounded-xl border border-[#1a2a40]/10">
-              <select
-                value={aiPromptTopic}
-                onChange={(e) => setAiPromptTopic(e.target.value)}
-                className="text-xs bg-transparent border-none text-[#1a2a40] font-medium focus:outline-hidden pr-2 cursor-pointer max-w-[140px]"
-              >
-                {ANIME_CATEGORIES_LIST.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
               <button
                 type="button"
-                onClick={handleAIGenerateQuote}
-                disabled={aiGenerating}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-linear-to-r from-[#003d80] to-[#4338ca] text-white text-xs font-semibold rounded-lg hover:brightness-110 transition-all shadow-xs disabled:opacity-50 cursor-pointer whitespace-nowrap"
+                onClick={() => onOpenAuth?.("signin")}
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-linear-to-r from-[#003d80] to-[#0056b3] text-white text-xs font-semibold hover:brightness-110 shadow-sm cursor-pointer transition-all"
               >
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                <span>{aiGenerating ? "Drafting..." : "AI Generate"}</span>
+                <LogIn className="w-4 h-4" />
+                <span>Sign In / Register to Add Quotes</span>
               </button>
             </div>
-          </div>
+          ) : (
+            <>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#1a2a40]/10">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-linear-to-br from-indigo-500 to-[#003d80] text-white flex items-center justify-center shadow-xs">
+                    <QuoteIcon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-['Cormorant_Garamond',serif] text-2xl font-semibold text-[#1a2a40]">
+                      Share an Anime Quote or Memory
+                    </h3>
+                    <p className="text-xs text-[#7a8fa8]">
+                      Add your favorite anime character dialogue, picture, and series name.
+                    </p>
+                  </div>
+                </div>
 
-          <form onSubmit={handleCreateQuote} className="space-y-4">
-            {feedbackMsg && (
-              <div className="p-3 bg-blue-50 border border-blue-200 text-xs font-medium text-[#003d80] rounded-xl animate-in fade-in">
-                {feedbackMsg}
+                {/* AI Generator Control */}
+                <div className="flex items-center gap-2 bg-[#f0f4f8] p-1.5 rounded-xl border border-[#1a2a40]/10">
+                  <select
+                    value={aiPromptTopic}
+                    onChange={(e) => setAiPromptTopic(e.target.value)}
+                    className="text-xs bg-transparent border-none text-[#1a2a40] font-medium focus:outline-hidden pr-2 cursor-pointer max-w-[140px]"
+                  >
+                    {ANIME_CATEGORIES_LIST.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={handleAIGenerateQuote}
+                    disabled={aiGenerating}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-linear-to-r from-[#003d80] to-[#4338ca] text-white text-xs font-semibold rounded-lg hover:brightness-110 transition-all shadow-xs disabled:opacity-50 cursor-pointer whitespace-nowrap"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                    <span>{aiGenerating ? "Drafting..." : "AI Generate"}</span>
+                  </button>
+                </div>
               </div>
-            )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-[11px] font-semibold text-[#4a5e7a] uppercase mb-1">
-                  Anime Character
-                </label>
-                <input
-                  type="text"
-                  value={characterInput}
-                  onChange={(e) => setCharacterInput(e.target.value)}
-                  placeholder="e.g. Rock Lee, Luffy, Levi..."
-                  className="w-full text-xs p-2.5 bg-[#f0f4f8] border border-[#1a2a40]/10 rounded-xl focus:outline-hidden focus:border-[#003d80]"
-                />
-              </div>
+              <form onSubmit={handleCreateQuote} className="space-y-4">
+                {feedbackMsg && (
+                  <div className="p-3 bg-blue-50 border border-blue-200 text-xs font-medium text-[#003d80] rounded-xl animate-in fade-in">
+                    {feedbackMsg}
+                  </div>
+                )}
 
-              <div>
-                <label className="block text-[11px] font-semibold text-[#4a5e7a] uppercase mb-1">
-                  Anime Series Title
-                </label>
-                <input
-                  type="text"
-                  value={animeTitleInput}
-                  onChange={(e) => setAnimeTitleInput(e.target.value)}
-                  placeholder="e.g. Naruto, One Piece, AOT..."
-                  className="w-full text-xs p-2.5 bg-[#f0f4f8] border border-[#1a2a40]/10 rounded-xl focus:outline-hidden focus:border-[#003d80]"
-                />
-              </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-[#4a5e7a] uppercase mb-1">
+                      Anime Character
+                    </label>
+                    <input
+                      type="text"
+                      value={characterInput}
+                      onChange={(e) => setCharacterInput(e.target.value)}
+                      placeholder="e.g. Rock Lee, Luffy, Levi..."
+                      className="w-full text-xs p-2.5 bg-[#f0f4f8] border border-[#1a2a40]/10 rounded-xl focus:outline-hidden focus:border-[#003d80]"
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-[11px] font-semibold text-[#4a5e7a] uppercase mb-1">
-                  Category
-                </label>
-                <select
-                  value={categoryInput}
-                  onChange={(e) => setCategoryInput(e.target.value)}
-                  className="w-full text-xs p-2.5 bg-[#f0f4f8] border border-[#1a2a40]/10 rounded-xl focus:outline-hidden focus:border-[#003d80] cursor-pointer"
-                >
-                  {ANIME_CATEGORIES_LIST.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-[#4a5e7a] uppercase mb-1">
+                      Anime Series Title
+                    </label>
+                    <input
+                      type="text"
+                      value={animeTitleInput}
+                      onChange={(e) => setAnimeTitleInput(e.target.value)}
+                      placeholder="e.g. Naruto, One Piece, AOT..."
+                      className="w-full text-xs p-2.5 bg-[#f0f4f8] border border-[#1a2a40]/10 rounded-xl focus:outline-hidden focus:border-[#003d80]"
+                    />
+                  </div>
 
-            <div>
-              <label className="block text-[11px] font-semibold text-[#4a5e7a] uppercase mb-1">
-                Character Picture / Wallpaper URL (Optional)
-              </label>
-              <div className="relative">
-                <ImageIcon className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#7a8fa8]" />
-                <input
-                  type="url"
-                  value={imageInput}
-                  onChange={(e) => setImageInput(e.target.value)}
-                  placeholder="https://images.unsplash.com/... or character artwork URL"
-                  className="w-full pl-8 pr-3 py-2.5 text-xs bg-[#f0f4f8] border border-[#1a2a40]/10 rounded-xl focus:outline-hidden focus:border-[#003d80]"
-                />
-              </div>
-            </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-[#4a5e7a] uppercase mb-1">
+                      Category
+                    </label>
+                    <select
+                      value={categoryInput}
+                      onChange={(e) => setCategoryInput(e.target.value)}
+                      className="w-full text-xs p-2.5 bg-[#f0f4f8] border border-[#1a2a40]/10 rounded-xl focus:outline-hidden focus:border-[#003d80] cursor-pointer"
+                    >
+                      {ANIME_CATEGORIES_LIST.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
 
-            <div>
-              <label className="block text-[11px] font-semibold text-[#4a5e7a] uppercase mb-1">
-                Quote or Memory Dialogue *
-              </label>
-              <textarea
-                value={textInput}
-                onChange={(e) => setTextInput(e.target.value)}
-                placeholder="Write an inspirational, emotional, or philosophical quote..."
-                rows={3}
-                required
-                className="w-full text-xs p-3 bg-[#f0f4f8] border border-[#1a2a40]/10 rounded-xl focus:outline-hidden focus:border-[#003d80]"
-              />
-            </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#4a5e7a] uppercase mb-1">
+                    Character Picture / Wallpaper URL (Optional)
+                  </label>
+                  <div className="relative">
+                    <ImageIcon className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#7a8fa8]" />
+                    <input
+                      type="url"
+                      value={imageInput}
+                      onChange={(e) => setImageInput(e.target.value)}
+                      placeholder="https://images.unsplash.com/... or character artwork URL"
+                      className="w-full pl-8 pr-3 py-2.5 text-xs bg-[#f0f4f8] border border-[#1a2a40]/10 rounded-xl focus:outline-hidden focus:border-[#003d80]"
+                    />
+                  </div>
+                </div>
 
-            <div className="flex justify-end pt-1">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#003d80] text-white rounded-xl text-xs font-semibold hover:bg-[#0056b3] transition-all shadow-sm cursor-pointer disabled:opacity-50"
-              >
-                <Send className="w-3.5 h-3.5" />
-                <span>{submitting ? "Posting..." : "Pin to Wall of Thoughts"}</span>
-              </button>
-            </div>
-          </form>
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#4a5e7a] uppercase mb-1">
+                    Quote or Memory Dialogue *
+                  </label>
+                  <textarea
+                    value={textInput}
+                    onChange={(e) => setTextInput(e.target.value)}
+                    placeholder="Write an inspirational, emotional, or philosophical quote..."
+                    rows={3}
+                    required
+                    className="w-full text-xs p-3 bg-[#f0f4f8] border border-[#1a2a40]/10 rounded-xl focus:outline-hidden focus:border-[#003d80]"
+                  />
+                </div>
+
+                <div className="flex justify-end pt-1">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#003d80] text-white rounded-xl text-xs font-semibold hover:bg-[#0056b3] transition-all shadow-sm cursor-pointer disabled:opacity-50"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>{submitting ? "Posting..." : "Pin to Wall of Thoughts"}</span>
+                  </button>
+                </div>
+              </form>
+            </>
+          )}
         </div>
 
         {/* Quotes Grid Section with Pagination */}

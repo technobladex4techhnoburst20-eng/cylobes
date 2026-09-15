@@ -9,15 +9,21 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if isAuthenticated();
     }
 
+    // Quotes: Publicly readable, write requires authenticated student
     match /quotes/{quoteId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated();
     }
 
+    // Public campus messages
     match /publicMessages/{messageId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if isAuthenticated();
     }
 
     match /privateMessages/{messageId} {
@@ -25,27 +31,31 @@ service cloud.firestore {
     }
 
     match /confessions/{confessionId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if isAuthenticated();
     }
 
+    // Memories & Polaroid Photos: Publicly viewable, upload requires authenticated student
     match /memories/{memoryId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated();
     }
 
+    // Media (Reels, Videos, Photos): Publicly viewable, post/upload/comment requires authenticated student
     match /media/{mediaId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated();
     }
 
     match /reels_and_videos/{itemId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated();
     }
 
     match /aiChats/{chatId} {
-      allow read, write: if true;
-    }
-
-    match /{document=**} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if isAuthenticated();
     }
   }
 }
